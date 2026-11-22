@@ -391,7 +391,6 @@
   function buildGloss() {
     var grid = $('#glossGrid'); if (!grid) return;
     grid.textContent = '';
-    grid.classList.add('reveal-children');
     GLOSSES.forEach(function (g) {
       var b = document.createElement('button');
       b.type = 'button'; b.className = 'gcard';
@@ -871,22 +870,6 @@
     wire();
     $('#out-chip').textContent = prefs.output.join(' + ');
     $('#txt-input').placeholder = prefs.lang === 'hi-IN' ? 'हिन्दी या English में लिखें…' : 'Type in English or हिन्दी…';
-
-    /* ---- scroll-reveal via IntersectionObserver ---- */
-    if ('IntersectionObserver' in window) {
-      var revealObs = new IntersectionObserver(function (entries) {
-        entries.forEach(function (e) {
-          if (e.isIntersecting) {
-            e.target.classList.add('visible');
-            revealObs.unobserve(e.target);
-          }
-        });
-      }, { threshold: 0.08 });
-      $$('.reveal, .reveal-children').forEach(function (el) { revealObs.observe(el); });
-    } else {
-      /* fallback: show everything */
-      $$('.reveal, .reveal-children').forEach(function (el) { el.classList.add('visible'); });
-    }
 
     if (!micSupported()) {
       banner('No speech recognition in this browser — Type mode and the accuracy lab need Chrome/Edge. Speech output still works.');
