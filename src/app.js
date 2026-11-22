@@ -47,13 +47,12 @@
   }
 
   function show(id) {
-    $$('.screen').forEach(function (s) { s.classList.add('hidden'); });
     var el = $('#screen-' + id);
     if (!el) return;
     el.classList.remove('hidden');
-    var h = el.querySelector('h1');
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    var h = el.querySelector('h1, h2');
     if (h) { h.setAttribute('tabindex', '-1'); h.focus({ preventScroll: true }); }
-    window.scrollTo({ top: 0, behavior: 'smooth' });
     if (id === 'lab') labRender();
   }
 
@@ -871,19 +870,21 @@
     $('#out-chip').textContent = prefs.output.join(' + ');
     $('#txt-input').placeholder = prefs.lang === 'hi-IN' ? 'हिन्दी या English में लिखें…' : 'Type in English or हिन्दी…';
 
+    joinRoom('SANKET-42');
+    seedDemo();
+    labRender();
+
     if (!micSupported()) {
       banner('No speech recognition in this browser — Type mode and the accuracy lab need Chrome/Edge. Speech output still works.');
     } else if (location.protocol === 'file:') {
       banner('Opened as a local file: microphone access is blocked by browsers. Serve it over https or localhost to use speech input.');
     }
-    $('#lanag-chip');
+    
     var hash = (location.hash || '').replace('#', '').toLowerCase();
-    if (hash === 'session') { joinRoom('SANKET-42'); seedDemo(); return; }
-    if (hash === 'lab') { show('lab'); return; }
-    if (hash === 'about') { show('about'); return; }
-    if (hash === 'home') { show('home'); return; }
-    announce('Sanket ready. Choose your communication preferences.');
-    show('onboard');
+    if (hash === 'session' || hash === 'lab' || hash === 'about' || hash === 'home' || hash === 'onboard') {
+      show(hash);
+    }
+    announce('Sanket ready. Voice-first multimodal accessibility platform.');
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
