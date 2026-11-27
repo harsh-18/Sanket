@@ -202,6 +202,7 @@
       cursor:pointer;display:flex;flex-direction:column;gap:.18rem;transition:border-color .15s,background .15s;
     }
     .gcard:hover{border-color:var(--primary);background:var(--lavender)}
+    .gcard.active{border-color:var(--primary);background:var(--lavender);box-shadow:0 0 0 2px rgba(102,85,217,.22)}
     .g-hi{font-weight:700;font-size:.98rem;color:var(--text)}
     .g-en{font-size:.82rem;font-weight:600;color:var(--primary)}
     .g-d{font-size:.73rem;color:var(--muted)}
@@ -515,13 +516,22 @@
                   <span class="chip warn">Limited vocabulary</span>
                 </div>
                 <div class="row" style="margin-top:.55rem">
-                  <button class="btn sm primary" id="btn-cam" type="button">📷 Start Camera</button>
+                  <button class="btn sm primary" id="btn-cam" type="button" aria-pressed="false">📷 Start Camera</button>
+                  <button class="btn sm" id="btn-cam-flip" type="button">🔄 Front/Rear</button>
+                  <button class="btn sm hidden" id="btn-cam-capture" type="button">📸 Capture Frame</button>
                   <button class="btn sm hidden" id="btn-cam-send" type="button">Send Detected Sign</button>
                 </div>
                 <p class="small muted" id="cam-status" role="status" style="margin:.45rem 0 0">Camera inactive. Permission requested only on start.</p>
                 <div class="camwrap hidden" id="cam-wrap">
                   <video id="cam-video" autoplay muted playsinline></video>
                   <canvas id="cam-canvas"></canvas>
+                </div>
+                <div class="hidden" id="cam-snap-wrap" style="margin-top:.6rem">
+                  <img id="cam-snapshot" alt="Captured handshape frame" style="width:100%;max-height:180px;object-fit:contain;border-radius:12px;border:1px solid var(--border);background:#0F172A"/>
+                  <div class="row" style="margin-top:.4rem">
+                    <span class="small muted">Captured frame (experimental landmark preview only)</span>
+                    <button class="btn sm" id="btn-cam-retake" type="button">↺ Retake</button>
+                  </div>
                 </div>
                 <div class="row" style="margin-top:.45rem">
                   <span class="chip hidden" id="sign-guess"></span>

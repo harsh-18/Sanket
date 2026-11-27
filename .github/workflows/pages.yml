@@ -26,8 +26,7 @@ jobs:
       - name: Prepare site files
         run: |
           mkdir -p _site
-          cp src/index.html _site/index.html
-          cp src/app.js _site/app.js
+          cp -r src/* _site/
       - name: Configure Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact

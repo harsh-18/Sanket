@@ -394,10 +394,72 @@
       box.appendChild(art);
     });
     if ($('#partner-isl-spotlight') && msgs.length) {
-      var latest = msgs[msgs.length - 1];
-      mountIslPlayer($('#partner-isl-spotlight'), latest.text, true);
+      renderAdaptiveOutput(msgs[msgs.length - 1]);
     }
     box.scrollTop = box.scrollHeight;
+  }
+
+  var selectedGlossId = null;
+  var outputSeq = 0;
+
+  function renderAdaptiveOutput(m) {
+    var host = $('#partner-isl-spotlight');
+    if (!host || !m) return;
+    var seqToken = ++outputSeq;
+    if (host._islTimer) { clearInterval(host._islTimer); host._islTimer = null; }
+    host.textContent = '';
+
+    var isHi = (m.lang || prefs.lang).slice(0, 2) === 'hi' || /[\u0900-\u097F]/.test(m.text || '');
+    var langLabel = isHi ? 'Hindi (हिन्दी)' : 'English';
+    var direction = 'Text → ISL Fingerspelling';
+    var statusLabel = 'Completed';
+    var statusCls = 'ok';
+    var honestyNote = 'Alphabet fingerspelling using ISLVT / Hindi-ISL character assets (not full continuous ISL translation).';
+
+    if (m.modality === 'sign-card') {
+      direction = 'Predefined Phrase → Adaptive Output';
+      statusLabel = 'Selected Phrase';
+      statusCls = 'sign';
+      honestyNote = 'Phrase selection mode (not camera recognition). Full ISL phrase video demonstration not yet available — showing phrase card & fingerspelling.';
+    } else if (m.modality === 'speech') {
+      direction = (isHi ? 'Hindi' : 'English') + ' Speech → ISL Fingerspelling';
+    } else if (m.modality === 'sign-heuristic') {
+      direction = 'Camera Handshape (Exp.) → Text / Speech';
+      statusLabel = 'Experimental';
+      statusCls = 'warn';
+      honestyNote = 'Experimental finger-extension heuristic — no trained ISL alphabet classifier loaded.';
+    }
+
+    var metaCard = document.createElement('div');
+    metaCard.className = 'card';
+    metaCard.style.cssText = 'padding:.85rem;background:#FFFFFF;margin-bottom:.65rem;border:1px solid var(--border);';
+    metaCard.innerHTML =
+      '<div class="row spread" style="margin-bottom:.4rem">' +
+        '<span class="chip ' + statusCls + '">' + statusLabel + '</span>' +
+        '<span class="chip">' + langLabel + '</span>' +
+      '</div>' +
+      '<div class="small muted" style="font-weight:700">Direction: ' + direction + '</div>' +
+      '<div style="font-size:1.15rem;font-weight:800;margin:.3rem 0;color:var(--text)">' +
+        String(m.text || '').replace(/[<>&]/g, function (c) { return ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' })[c]; }) +
+      '</div>' +
+      '<div class="small muted">' + honestyNote + '</div>';
+
+    var actRow = document.createElement('div');
+    actRow.className = 'row';
+    actRow.style.marginTop = '.55rem';
+    var spk = document.createElement('button');
+    spk.type = 'button'; spk.className = 'btn sm';
+    spk.textContent = '🔊 Speak Output';
+    spk.onclick = function () { speak(m.text, m.lang || prefs.lang); };
+    actRow.appendChild(spk);
+    metaCard.appendChild(actRow);
+    host.appendChild(metaCard);
+
+    if (m.modality !== 'sign-heuristic') {
+      var playerHost = document.createElement('div');
+      host.appendChild(playerHost);
+      if (seqToken === outputSeq) mountIslPlayer(playerHost, m.text, true);
+    }
   }
 
   function renderPeers() {
@@ -416,29 +478,30 @@
 
   /* ---------------- composer tabs ---------------- */
   function tab(id) {
+    if (id !== 'sign' && stream) stopCamera();
+    if (id !== 'speak') resetSpeak();
     ['speak', 'type', 'sign'].forEach(function (k) {
       var b = $('#tab-' + k), p = $('#pane-' + k);
       var on = k === id;
-      b.setAttribute('aria-selected', on ? 'true' : 'false');
-      b.tabIndex = on ? 0 : -1;
-      p.classList.toggle('hidden', !on);
+      if (b) { b.setAttribute('aria-selected', on ? 'true' : 'false'); b.tabIndex = on ? 0 : -1; }
+      if (p) p.classList.toggle('hidden', !on);
     });
   }
 
   /* ---------------- gloss vocabulary ---------------- */
   var GLOSSES = [
-    { id: 'namaste', hi: 'नमस्ते', en: 'Hello', desc: 'Palms joined at chest' },
-    { id: 'haan', hi: 'हाँ', en: 'Yes', desc: 'Fist nodding forward' },
-    { id: 'nahi', hi: 'नहीं', en: 'No', desc: 'Index finger side-to-side' },
-    { id: 'dhanyavad', hi: 'धन्यवाद', en: 'Thank you', desc: 'Fingertips from chin outward' },
-    { id: 'kripya', hi: 'कृपया', en: 'Please', desc: 'Flat palm circular on chest' },
-    { id: 'madad', hi: 'मदद', en: 'Help', desc: 'Fist on flat palm, lifted' },
-    { id: 'paani', hi: 'पानी', en: 'Water', desc: 'W-handshape to lips' },
+    { id: 'namaste', hi: 'नमस्ते', en: 'Namaste / Hello', desc: 'Palms joined at chest' },
+    { id: 'hello', hi: 'हेलो', en: 'Hello', desc: 'Open palm wave greeting' },
+    { id: 'haan', hi: 'हाँ', en: 'Haan (Yes)', desc: 'Fist nodding forward' },
+    { id: 'nahi', hi: 'नहीं', en: 'Nahi (No)', desc: 'Index finger side-to-side' },
+    { id: 'dhanyavad', hi: 'धन्यवाद', en: 'Dhanyavaad (Thank you)', desc: 'Fingertips from chin outward' },
+    { id: 'kripya', hi: 'कृपया', en: 'Kripya (Please)', desc: 'Flat palm circular on chest' },
+    { id: 'madad', hi: 'मदद', en: 'Madad (Help)', desc: 'Fist on flat palm, lifted' },
+    { id: 'paani', hi: 'पानी', en: 'Paani (Water)', desc: 'W-handshape to lips' },
     { id: 'doctor', hi: 'डॉक्टर', en: 'Doctor', desc: 'Two fingers on wrist pulse' },
-    { id: 'samajh', hi: 'समझ गया', en: 'Understood', desc: 'Index from temple forward' },
-    { id: 'phir', hi: 'फिर मिलेंगे', en: 'See you again', desc: 'Open hand closing, moving away' },
-    { id: 'maafi', hi: 'माफ़ कीजिए', en: 'Sorry', desc: 'Fist circling on chest' },
-    { id: 'dhyan', hi: 'ध्यान दीजिए', en: 'Please pay attention', desc: 'Both hands frame face' }
+    { id: 'samajh', hi: 'समझ गया', en: 'Samajh gaya (Understood)', desc: 'Index from temple forward' },
+    { id: 'phir', hi: 'फिर मिलेंगे', en: 'Phir milenge (See you)', desc: 'Open hand closing, moving away' },
+    { id: 'maafi', hi: 'माफ़ कीजिए', en: 'Maafi (Sorry)', desc: 'Fist circling on chest' }
   ];
 
   function buildGloss() {
@@ -446,13 +509,18 @@
     grid.textContent = '';
     GLOSSES.forEach(function (g) {
       var b = document.createElement('button');
-      b.type = 'button'; b.className = 'gcard';
-      b.setAttribute('aria-label', g.hi + ', ' + g.en + '. Sign description: ' + g.desc + '. Send as ISL gloss.');
+      b.type = 'button';
+      b.className = 'gcard' + (selectedGlossId === g.id ? ' active' : '');
+      b.setAttribute('aria-pressed', selectedGlossId === g.id ? 'true' : 'false');
+      b.setAttribute('aria-label', g.hi + ', ' + g.en + '. Sign description: ' + g.desc + '. Send as ISL phrase.');
       var a = document.createElement('span'); a.className = 'g-hi'; a.textContent = g.hi;
       var c = document.createElement('span'); c.className = 'g-en'; c.textContent = g.en;
       var d = document.createElement('span'); d.className = 'g-d'; d.textContent = g.desc;
       b.appendChild(a); b.appendChild(c); b.appendChild(d);
       b.onclick = function () {
+        selectedGlossId = g.id;
+        $$('.gcard', grid).forEach(function (el) { el.classList.remove('active'); el.setAttribute('aria-pressed', 'false'); });
+        b.classList.add('active'); b.setAttribute('aria-pressed', 'true');
         send({
           text: prefs.lang === 'hi-IN' ? g.hi : g.en,
           modality: 'sign-card', gloss: g.id, confidence: null
@@ -834,12 +902,13 @@
   }
 
   /* ---------------- camera handshape (experimental) ---------------- */
-  var stream = null, landmarker = null, rafId = null, shapeHist = [], camLoopOn = false;
+  var stream = null, landmarker = null, rafId = null, shapeHist = [], camLoopOn = false, camFacing = 'user';
 
   function camStatus(t, tone) {
-    var s = $('#camStatus');
+    var s = $('#cam-status');
+    if (!s) return;
     s.textContent = t || '';
-    s.style.color = tone === 'bad' ? 'var(--bad)' : tone === 'ok' ? 'var(--ok)' : 'var(--muted)';
+    s.style.color = tone === 'bad' ? 'var(--danger)' : tone === 'ok' ? 'var(--mint-text)' : 'var(--muted)';
   }
 
   function dist(a, b) { var dx = a.x - b.x, dy = a.y - b.y; return Math.sqrt(dx * dx + dy * dy); }
@@ -881,29 +950,41 @@
 
   function loop() {
     if (!camLoopOn) return;
-    var video = $('#cam'), canvas = $('#camCanvas');
-    if (video && video.readyState >= 2 && landmarker) {
-      var res;
-      try { res = landmarker.detectForVideo(video, performance.now()); } catch (e) { res = null; }
-      var lm = res && res.landmarks && res.landmarks[0] ? res.landmarks[0] : null;
-      drawLandmarks(lm, canvas, video);
-      var c = classify(lm);
-      if (c) {
-        shapeHist.push(c.label);
-        if (shapeHist.length > 10) shapeHist.shift();
-        var counts = {};
-        shapeHist.forEach(function (l) { counts[l] = (counts[l] || 0) + 1; });
-        var best = null, bv = 0;
-        Object.keys(counts).forEach(function (k) { if (counts[k] > bv) { bv = counts[k]; best = k; } });
-        var stability = Math.round((bv / shapeHist.length) * 100);
-        $('#camLabel').textContent = best + ' · stability ' + stability + '%';
-        $('#camActions').classList.remove('hidden');
-        $('#camLabel').dataset.shape = best;
-        $('#camLabel').dataset.stability = String(stability);
+    var video = $('#cam-video'), canvas = $('#cam-canvas');
+    if (video && canvas && video.readyState >= 2) {
+      if (canvas.width !== video.videoWidth && video.videoWidth) {
+        canvas.width = video.videoWidth; canvas.height = video.videoHeight;
       }
-    } else if (!landmarker && video && video.readyState >= 2) {
-      var ctx = canvas.getContext('2d');
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      if (landmarker) {
+        var res;
+        try { res = landmarker.detectForVideo(video, performance.now()); } catch (e) { res = null; }
+        var lm = res && res.landmarks && res.landmarks[0] ? res.landmarks[0] : null;
+        drawLandmarks(lm, canvas, video);
+        var c = classify(lm);
+        if (c) {
+          shapeHist.push(c.label);
+          if (shapeHist.length > 10) shapeHist.shift();
+          var counts = {};
+          shapeHist.forEach(function (l) { counts[l] = (counts[l] || 0) + 1; });
+          var best = null, bv = 0;
+          Object.keys(counts).forEach(function (k) { if (counts[k] > bv) { bv = counts[k]; best = k; } });
+          var stability = Math.round((bv / shapeHist.length) * 100);
+          if ($('#sign-guess')) {
+            $('#sign-guess').textContent = best;
+            $('#sign-guess').dataset.shape = best;
+            $('#sign-guess').classList.remove('hidden');
+          }
+          if ($('#sign-stab')) {
+            $('#sign-stab').textContent = 'stability ' + stability + '%';
+            $('#sign-stab').dataset.stability = String(stability);
+            $('#sign-stab').classList.remove('hidden');
+          }
+          if ($('#btn-cam-send')) $('#btn-cam-send').classList.remove('hidden');
+        }
+      } else {
+        var ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      }
     }
     rafId = requestAnimationFrame(loop);
   }
@@ -911,18 +992,29 @@
   function startCamera() {
     var btn = $('#btn-cam');
     if (stream) { stopCamera(); return; }
-    camStatus('Requesting camera…');
-    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: 640 } })
+    if (!window.isSecureContext && !/^(localhost|127\.0\.0\.1)$/i.test(location.hostname)) {
+      camStatus('Camera requires HTTPS or localhost.', 'bad');
+      return;
+    }
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      camStatus('Camera API is unavailable in this browser.', 'bad');
+      return;
+    }
+    camStatus('Requesting camera permission…');
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: camFacing, width: { ideal: 640 } } })
       .then(function (s) {
         stream = s;
-        $('#camWrap').classList.remove('hidden');
-        var v = $('#cam'); v.srcObject = s;
-        return v.play();
+        if ($('#cam-wrap')) $('#cam-wrap').classList.remove('hidden');
+        if ($('#cam-snap-wrap')) $('#cam-snap-wrap').classList.add('hidden');
+        if ($('#btn-cam-capture')) $('#btn-cam-capture').classList.remove('hidden');
+        var v = $('#cam-video');
+        if (v) { v.srcObject = s; return v.play(); }
       })
       .then(function () {
-        btn.setAttribute('aria-pressed', 'true');
-        btn.textContent = 'Stop camera';
-        camStatus('Loading hand-landmark model (needs internet)…');
+        if (btn) { btn.setAttribute('aria-pressed', 'true'); btn.textContent = '⏹ Stop Camera'; }
+        camLoopOn = true;
+        loop();
+        camStatus('Camera live. Loading experimental MediaPipe hand-landmark model…');
         return import('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/vision_bundle.mjs');
       })
       .then(function (vision) {
@@ -936,16 +1028,22 @@
       })
       .then(function (hl) {
         landmarker = hl;
-        camLoopOn = true;
-        loop();
-        camStatus('Camera ready. Hold one static handshape in frame. Heuristic reading — confirm before sending.', 'ok');
+        camStatus('Camera live (experimental landmark preview — no full ISL alphabet classifier).', 'ok');
       })
       .catch(function (err) {
-        camLoopOn = false;
-        if (rafId) cancelAnimationFrame(rafId);
-        var m = (err && err.message) || '';
-        if (/Permission|NotAllowed|denied/i.test(m)) camStatus('Camera permission blocked. Gloss cards below still work.', 'bad');
-        else camStatus('Hand model could not load (offline or blocked). The validated gloss cards still work.', 'bad');
+        var name = (err && (err.name || err.message)) || '';
+        if (/Permission|NotAllowed|denied/i.test(name)) {
+          stopCamera();
+          camStatus('Camera permission denied. Allow camera access or use phrase cards above.', 'bad');
+        } else if (/NotFound|DevicesNotFound/i.test(name)) {
+          stopCamera();
+          camStatus('No camera device found on this system.', 'bad');
+        } else if (stream) {
+          camStatus('Camera live (MediaPipe model offline — capture & preview still work).', 'ok');
+        } else {
+          stopCamera();
+          camStatus('Unable to start camera (' + name + ').', 'bad');
+        }
       });
   }
 
@@ -953,10 +1051,24 @@
     camLoopOn = false;
     if (rafId) cancelAnimationFrame(rafId);
     if (stream) { stream.getTracks().forEach(function (t) { t.stop(); }); stream = null; }
-    $('#camWrap').classList.add('hidden');
-    $('#camActions').classList.add('hidden');
-    var b = $('#btn-cam'); b.setAttribute('aria-pressed', 'false'); b.textContent = 'Start camera';
+    if ($('#cam-wrap')) $('#cam-wrap').classList.add('hidden');
+    if ($('#btn-cam-capture')) $('#btn-cam-capture').classList.add('hidden');
+    if ($('#btn-cam-send')) $('#btn-cam-send').classList.add('hidden');
+    var b = $('#btn-cam');
+    if (b) { b.setAttribute('aria-pressed', 'false'); b.textContent = '📷 Start Camera'; }
     camStatus('Camera stopped.');
+  }
+
+  function captureCameraFrame() {
+    var v = $('#cam-video'), img = $('#cam-snapshot');
+    if (!v || !img || !v.videoWidth) return;
+    var c = document.createElement('canvas');
+    c.width = v.videoWidth; c.height = v.videoHeight;
+    c.getContext('2d').drawImage(v, 0, 0);
+    img.src = c.toDataURL('image/jpeg', 0.85);
+    if ($('#cam-wrap')) $('#cam-wrap').classList.add('hidden');
+    if ($('#cam-snap-wrap')) $('#cam-snap-wrap').classList.remove('hidden');
+    camStatus('Frame captured. Recognition is experimental — retake or use phrase cards.', 'ok');
   }
 
   /* ---------------- voice commands ---------------- */
@@ -1256,6 +1368,17 @@
 
     // sign camera
     if ($('#btn-cam')) $('#btn-cam').onclick = startCamera;
+    if ($('#btn-cam-flip')) $('#btn-cam-flip').onclick = function () {
+      camFacing = camFacing === 'user' ? 'environment' : 'user';
+      camStatus('Camera facing set to: ' + (camFacing === 'user' ? 'Front' : 'Rear'));
+      if (stream) { stopCamera(); startCamera(); }
+    };
+    if ($('#btn-cam-capture')) $('#btn-cam-capture').onclick = captureCameraFrame;
+    if ($('#btn-cam-retake')) $('#btn-cam-retake').onclick = function () {
+      if ($('#cam-snap-wrap')) $('#cam-snap-wrap').classList.add('hidden');
+      if ($('#cam-wrap') && stream) $('#cam-wrap').classList.remove('hidden');
+      camStatus('Live camera preview resumed.');
+    };
     if ($('#btn-cam-send')) $('#btn-cam-send').onclick = function () {
       var g = $('#sign-guess');
       var shape = (g && g.dataset && g.dataset.shape) || (g && g.textContent) || '';
