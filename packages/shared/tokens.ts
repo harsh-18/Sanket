@@ -36,10 +36,4 @@ export const SANKET_RADIUS = {
 export const SUPPORTED_LANGUAGES = [
   { code: 'hi-IN', label: 'हिन्दी (Hindi)', short: 'Hindi' },
   { code: 'en-IN', label: 'English (India)', short: 'English' },
-  { code: 'ta-IN', label: 'தமிழ் (Tamil)', short: 'Tamil' },
-  { code: 'te-IN', label: 'తెలుగు (Telugu)', short: 'Telugu' },
-  { code: 'mr-IN', label: 'मराठी (Marathi)', short: 'Marathi' },
-  { code: 'bn-IN', label: 'বাংলা (Bengali)', short: 'Bengali' },
-  { code: 'kn-IN', label: 'ಕನ್ನಡ (Kannada)', short: 'Kannada' },
-  { code: 'gu-IN', label: 'ગુજરાતી (Gujarati)', short: 'Gujarati' },
 ] as const;
