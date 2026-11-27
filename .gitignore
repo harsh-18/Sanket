@@ -15,8 +15,9 @@ bhashini-keys*
 Thumbs.db
 *.swp
 
-# Raw multi-GB training datasets (keep extracted reference samples in src/assets/isl/)
+# Raw multi-GB training datasets (keep extracted reference samples in src/assets/isl* )
 /ISL/
+/Hindi-ISL/
 
 # Local build / temp artifacts
 _site/

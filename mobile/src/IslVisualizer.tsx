@@ -54,7 +54,7 @@ export function IslVisualizer({ text, fontScale = 1 }: Props) {
           </Pressable>
         ))}
       </View>
-      <Text style={styles.attr}>ISL Sign Cards · ISLRTC / AI4Bharat INCLUDE</Text>
+      <Text style={styles.attr}>ISL Sign Cards · ISLVT (doi:10.17632/98mzk82wbb.1) &amp; Hindi ISL (Krish Bhagat, Kaggle)</Text>
     </View>
   );
 }
