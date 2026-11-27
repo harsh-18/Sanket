@@ -459,32 +459,70 @@
     });
   }
 
-  /* ---------------- Text -> ISL Glossifier & Visual Sign Card Player ---------------- */
+  /* ---------------- Text -> ISL Glossifier & Per-Word/Letter SVG Flashcards ---------------- */
   var ISL_STOP = {
     is: 1, am: 1, are: 1, was: 1, were: 1, the: 1, a: 1, an: 1, to: 1, for: 1, of: 1, in: 1, on: 1, at: 1,
-    i: 1, me: 1, my: 1, हूँ: 1, हूं: 1, है: 1, हैं: 1, था: 1, थी: 1, को: 1, का: 1, की: 1, के: 1, में: 1, से: 1, पर: 1
+    हूँ: 1, हूं: 1, है: 1, हैं: 1, था: 1, थी: 1, को: 1, का: 1, की: 1, के: 1, में: 1, से: 1, पर: 1, पास: 1
   };
 
   var ISL_SIGNS = {
-    HELLO:      { words: ['hello','hi','namaste','नमस्ते','नमस्कार'], icon: '🙏', hi: 'नमस्ते', desc: 'Join both palms at chest & bow slightly', anim: 'anim-nod', dir: '↕ BOW' },
-    YES:        { words: ['yes','haan','ok','okay','हाँ','हां','ठीक'], icon: '👍', hi: 'हाँ', desc: 'Closed fist nodding forward twice', anim: 'anim-nod', dir: '↓ NOD' },
-    NO:         { words: ['no','not','nahi','nahin','नहीं','ना'], icon: '☝️', hi: 'नहीं', desc: 'Index finger sweeping side-to-side', anim: 'anim-shake', dir: '⇄ SHAKE' },
-    THANK_YOU:  { words: ['thanks','thank','thankyou','dhanyavad','dhanyavaad','शुक्रिया','धन्यवाद'], icon: '🤲', hi: 'धन्यवाद', desc: 'Fingertips from chin moving outward', anim: 'anim-out', dir: '→ OUT' },
-    PLEASE:     { words: ['please','kripya','कृपया'], icon: '🫶', hi: 'कृपया', desc: 'Flat palm circling gently on chest', anim: 'anim-circle', dir: '↻ CIRCLE' },
-    HELP:       { words: ['help','madad','बचाओ','मदद','सहायता'], icon: '🆘', hi: 'मदद', desc: 'Fist resting on flat palm, lifted together', anim: 'anim-lift', dir: '↑ LIFT' },
-    WATER:      { words: ['water','paani','pani','पानी','जल'], icon: '💧', hi: 'पानी', desc: 'W-handshape tapped near lips twice', anim: 'anim-nod', dir: '👄 LIPS' },
-    DOCTOR:     { words: ['doctor','hospital','clinic','डॉक्टर','अस्पताल'], icon: '🩺', hi: 'डॉक्टर', desc: 'Two fingers tapping wrist pulse', anim: 'anim-pulse', dir: '💓 PULSE' },
-    UNDERSTOOD: { words: ['understood','understand','samajh','समझ'], icon: '💡', hi: 'समझ गया', desc: 'Index finger moving forward from temple', anim: 'anim-out', dir: '→ TEMPLE' },
-    GOODBYE:    { words: ['bye','goodbye','again','phir','फिर','अलविदा'], icon: '👋', hi: 'फिर मिलेंगे', desc: 'Open hand waving outward while closing', anim: 'anim-shake', dir: '👋 WAVE' },
-    SORRY:      { words: ['sorry','maaf','maafi','माफ़','माफ'], icon: '✊', hi: 'माफ़ कीजिए', desc: 'Closed fist circling on chest', anim: 'anim-circle', dir: '↻ CHEST' },
-    ATTENTION:  { words: ['attention','listen','dhyan','ध्यान','सुनो'], icon: '👀', hi: 'ध्यान दीजिए', desc: 'Both flat hands framing sides of face', anim: 'anim-pulse', dir: '👀 FOCUS' },
-    WAIT:       { words: ['wait','ruko','minute','minutes','रुको','मिनट'], icon: '✋', hi: 'रुको', desc: 'Open palm held steady facing forward', anim: 'anim-pulse', dir: '✋ HOLD' },
-    WHERE:      { words: ['where','kahan','कहाँ','कहां'], icon: '❓', hi: 'कहाँ', desc: 'Both palms upturned, side-to-side question', anim: 'anim-shake', dir: '⇄ ASK' },
-    COME:       { words: ['come','aao','aaiye','आओ','आइए'], icon: '🫳', hi: 'आइए', desc: 'Open hand beckoning inward toward chest', anim: 'anim-in', dir: '← IN' },
-    GATE:       { words: ['gate','door','outside','bahar','गेट','दरवाजा','बाहर'], icon: '🚪', hi: 'गेट / बाहर', desc: 'Both hands swinging open like doors', anim: 'anim-out', dir: '↔ OPEN' },
-    DELIVERY:   { words: ['delivery','order','parcel','package','zomato','swiggy','डिलीवरी','ऑर्डर'], icon: '📦', hi: 'डिलीवरी', desc: 'Both hands holding & handing parcel forward', anim: 'anim-out', dir: '→ HAND' },
-    NEED:       { words: ['need','want','chahiye','चाहिए','ज़रूरत'], icon: '🫴', hi: 'चाहिए', desc: 'Curved palm pulled downward toward body', anim: 'anim-in', dir: '↓ PULL' },
-    GOOD:       { words: ['good','great','accha','अच्छा','बढ़िया'], icon: '👌', hi: 'अच्छा', desc: 'Thumb & index circle / chin-to-palm out', anim: 'anim-out', dir: '✓ GOOD' }
+    HELLO:      { words: ['hello','hi','namaste','नमस्ते','नमस्कार'], icon: '🙏', hi: 'नमस्ते', desc: 'Join both palms at chest & bow slightly', anim: 'anim-nod', dir: '↕ BOW', pose: 'palms-join' },
+    ME:         { words: ['i','me','my','myself','main','mujhe','मैं','मुझे','मेरा'], icon: '👆', hi: 'मैं / मुझे', desc: 'Point index finger toward your chest', anim: 'anim-in', dir: '← CHEST', pose: 'point-self' },
+    GO:         { words: ['go','going','jaana','jana','jao','जाना','जाओ','गया'], icon: '🚶', hi: 'जाना', desc: 'Move open hand forward away from body', anim: 'anim-out', dir: '→ GO', pose: 'sweep-out' },
+    YES:        { words: ['yes','haan','ok','okay','हाँ','हां'], icon: '👍', hi: 'हाँ', desc: 'Closed fist nodding forward twice', anim: 'anim-nod', dir: '↓ NOD', pose: 'fist-nod' },
+    NO:         { words: ['no','not','nahi','nahin','नहीं','ना'], icon: '☝️', hi: 'नहीं', desc: 'Index finger sweeping side-to-side', anim: 'anim-shake', dir: '⇄ SHAKE', pose: 'index-shake' },
+    THANK_YOU:  { words: ['thanks','thank','thankyou','dhanyavad','dhanyavaad','शुक्रिया','धन्यवाद'], icon: '🤲', hi: 'धन्यवाद', desc: 'Fingertips from chin moving outward', anim: 'anim-out', dir: '→ OUT', pose: 'chin-out' },
+    PLEASE:     { words: ['please','kripya','कृपया'], icon: '🫶', hi: 'कृपया', desc: 'Flat palm circling gently on chest', anim: 'anim-circle', dir: '↻ CIRCLE', pose: 'palm-circle' },
+    HELP:       { words: ['help','madad','बचाओ','मदद','सहायता'], icon: '🆘', hi: 'मदद', desc: 'Fist resting on flat palm, lifted together', anim: 'anim-lift', dir: '↑ LIFT', pose: 'fist-on-palm' },
+    WATER:      { words: ['water','paani','pani','पानी','जल'], icon: '💧', hi: 'पानी', desc: 'W-handshape tapped near lips twice', anim: 'anim-nod', dir: '👄 LIPS', pose: 'three-lips' },
+    DOCTOR:     { words: ['doctor','hospital','clinic','डॉक्टर','अस्पताल'], icon: '🩺', hi: 'डॉक्टर', desc: 'Two fingers tapping wrist pulse', anim: 'anim-pulse', dir: '💓 PULSE', pose: 'wrist-tap' },
+    MEDICINE:   { words: ['medicine','dawa','tablet','दवा','दवाई','गोली'], icon: '💊', hi: 'दवा', desc: 'Middle finger circling on opposite palm', anim: 'anim-circle', dir: '↻ PALM', pose: 'palm-circle' },
+    HOME:       { words: ['home','house','ghar','घर','मकान'], icon: '🏠', hi: 'घर', desc: 'Fingertips of both hands forming a roof peak', anim: 'anim-pulse', dir: '⌂ ROOF', pose: 'roof-peak' },
+    FOOD:       { words: ['food','eat','khana','खाना','भोजन','रोटी'], icon: '🍽️', hi: 'खाना', desc: 'Bunched fingertips brought toward mouth', anim: 'anim-in', dir: '👄 EAT', pose: 'to-mouth' },
+    NAME:       { words: ['name','naam','नाम'], icon: '🏷️', hi: 'नाम', desc: 'Two fingers tapping across opposite two fingers', anim: 'anim-nod', dir: '✕ TAP', pose: 'cross-tap' },
+    PHONE:      { words: ['phone','call','mobile','फ़ोन','फोन','कॉल'], icon: '📞', hi: 'फ़ोन', desc: 'Thumb & pinky held near ear and mouth', anim: 'anim-pulse', dir: '👂 EAR', pose: 'phone-ear' },
+    MONEY:      { words: ['money','rupees','paise','cash','पैसे','रुपये','नकद'], icon: '💵', hi: 'पैसे', desc: 'Rub thumb across fingertips twice', anim: 'anim-shake', dir: '⇄ RUB', pose: 'pinch-rub' },
+    UNDERSTOOD: { words: ['understood','understand','samajh','समझ'], icon: '💡', hi: 'समझ गया', desc: 'Index finger moving forward from temple', anim: 'anim-out', dir: '→ TEMPLE', pose: 'temple-out' },
+    GOODBYE:    { words: ['bye','goodbye','again','phir','फिर','अलविदा'], icon: '👋', hi: 'फिर मिलेंगे', desc: 'Open hand waving outward', anim: 'anim-shake', dir: '👋 WAVE', pose: 'wave-hand' },
+    SORRY:      { words: ['sorry','maaf','maafi','माफ़','माफ'], icon: '✊', hi: 'माफ़ कीजिए', desc: 'Closed fist circling on chest', anim: 'anim-circle', dir: '↻ CHEST', pose: 'fist-circle' },
+    ATTENTION:  { words: ['attention','listen','dhyan','ध्यान','सुनो'], icon: '👀', hi: 'ध्यान दीजिए', desc: 'Both flat hands framing sides of face', anim: 'anim-pulse', dir: '👀 FOCUS', pose: 'frame-face' },
+    WAIT:       { words: ['wait','ruko','minute','minutes','रुको','मिनट'], icon: '✋', hi: 'रुको', desc: 'Open palm held steady facing forward', anim: 'anim-pulse', dir: '✋ HOLD', pose: 'open-stop' },
+    WHERE:      { words: ['where','kahan','कहाँ','कहां'], icon: '❓', hi: 'कहाँ', desc: 'Both palms upturned, side-to-side question', anim: 'anim-shake', dir: '⇄ ASK', pose: 'palms-up' },
+    COME:       { words: ['come','aao','aaiye','आओ','आइए'], icon: '🫳', hi: 'आइए', desc: 'Open hand beckoning inward toward chest', anim: 'anim-in', dir: '← IN', pose: 'beckon-in' },
+    GATE:       { words: ['gate','door','outside','bahar','गेट','दरवाजा','बाहर'], icon: '🚪', hi: 'गेट / बाहर', desc: 'Both hands swinging open like doors', anim: 'anim-out', dir: '↔ OPEN', pose: 'doors-open' },
+    DELIVERY:   { words: ['delivery','order','parcel','package','zomato','swiggy','डिलीवरी','ऑर्डर'], icon: '📦', hi: 'डिलीवरी', desc: 'Both hands holding & handing parcel forward', anim: 'anim-out', dir: '→ HAND', pose: 'box-hand' },
+    NEED:       { words: ['need','want','chahiye','चाहिए','ज़रूरत'], icon: '🫴', hi: 'चाहिए', desc: 'Curved palm pulled downward toward body', anim: 'anim-in', dir: '↓ PULL', pose: 'pull-down' },
+    GOOD:       { words: ['good','great','accha','thik','theek','अच्छा','ठीक','बढ़िया'], icon: '👌', hi: 'अच्छा / ठीक', desc: 'Thumb & index circle / chin-to-palm out', anim: 'anim-out', dir: '✓ GOOD', pose: 'ok-hand' }
+  };
+
+  // Distinct two-handed ISL manual alphabet instructions & hand-pose geometry per letter
+  var ISL_ALPHA = {
+    A: ['Touch right index finger to left thumb tip', [1,0,0,0,0]],
+    B: ['Form circles with both hands like binoculars', [1,1,0,0,0]],
+    C: ['Curve thumb and index into a C-shape', [1,1,0,0,0]],
+    D: ['Curve right index & thumb onto left index', [1,1,0,0,0]],
+    E: ['Touch right index tip to left index tip', [0,1,0,0,0]],
+    F: ['Cross right index & middle over left two fingers', [0,1,1,0,0]],
+    G: ['Stack closed right fist atop closed left fist', [0,0,0,0,0]],
+    H: ['Slide flat right palm across flat left palm', [1,1,1,1,1]],
+    I: ['Touch right index to left middle fingertip', [0,1,0,0,0]],
+    J: ['Trace down left middle finger onto palm', [0,1,0,0,0]],
+    K: ['Hook bent right index onto left index', [0,1,0,0,0]],
+    L: ['Rest right index finger flat on left palm', [0,1,0,0,0]],
+    M: ['Place three right fingers onto left palm', [0,1,1,1,0]],
+    N: ['Place two right fingers onto left palm', [0,1,1,0,0]],
+    O: ['Touch right index to left ring fingertip (O-ring)', [1,1,1,1,0]],
+    P: ['Circle right thumb & index onto left index tip', [1,1,0,0,0]],
+    Q: ['Hook right index around left thumb-index ring', [1,1,0,0,0]],
+    R: ['Curve right index onto open left palm', [0,1,0,0,0]],
+    S: ['Hook right pinky with left pinky finger', [0,0,0,0,1]],
+    T: ['Point right index to lower edge of left palm', [0,1,0,0,0]],
+    U: ['Point right index to left pinky fingertip', [0,0,0,0,1]],
+    V: ['Form V with index & middle on left palm', [0,1,1,0,0]],
+    W: ['Interlock fingers of both open hands', [1,1,1,1,1]],
+    X: ['Cross both extended index fingers in an X', [0,1,0,0,0]],
+    Y: ['Touch right index into web of left thumb & index', [1,1,0,0,0]],
+    Z: ['Rest right fingertips against open left palm', [1,1,1,1,1]]
   };
 
   var WORD_TO_GLOSS = {};
@@ -492,31 +530,62 @@
     ISL_SIGNS[g].words.forEach(function (w) { WORD_TO_GLOSS[w] = g; });
   });
 
+  function renderFlashcardSvg(item) {
+    var f = item.fingers || [1, 1, 1, 1, 1];
+    var label = item.badge || item.gloss.slice(0, 3);
+    var accent = item.isAlpha ? '#6655D9' : '#0F6B48';
+    var xs = [16, 25, 34, 43, 52];
+    var tips = [30, 14, 10, 14, 22];
+    var fingersSvg = xs.map(function (x, i) {
+      var up = f[i];
+      var y2 = up ? tips[i] : 36;
+      return '<line x1="' + x + '" y1="42" x2="' + x + '" y2="' + y2 + '" stroke="' + accent + '" stroke-width="4" stroke-linecap="round"/>' +
+             (up ? '<circle cx="' + x + '" cy="' + y2 + '" r="2.6" fill="#20233B"/>' : '');
+    }).join('');
+    return '<svg viewBox="0 0 68 68" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
+      '<rect x="14" y="38" width="40" height="20" rx="8" fill="' + accent + '" opacity="0.22" stroke="' + accent + '" stroke-width="2"/>' +
+      fingersSvg +
+      '<rect x="2" y="2" width="24" height="16" rx="6" fill="#20233B"/>' +
+      '<text x="14" y="13" text-anchor="middle" font-family="Inter,sans-serif" font-size="10" font-weight="800" fill="#FFFFFF">' + label + '</text>' +
+      '</svg>';
+  }
+
   function textToIslSequence(text) {
     var clean = String(text || '').toLowerCase().replace(/[?!.,।:;'"()]/g, ' ').trim();
-    if (!clean) return [{ gloss: 'HELLO', icon: '🙏', hi: 'नमस्ते', desc: ISL_SIGNS.HELLO.desc, anim: 'anim-nod', dir: '↕ BOW' }];
+    if (!clean) return [{ gloss: 'HELLO', icon: '🙏', hi: 'नमस्ते', desc: ISL_SIGNS.HELLO.desc, anim: 'anim-nod', dir: '↕ BOW', fingers: [1,1,1,1,1], badge: '🙏' }];
     var raw = clean.split(/\s+/), seq = [];
     raw.forEach(function (tok) {
       if (!tok || ISL_STOP[tok]) return;
       var g = WORD_TO_GLOSS[tok];
       if (g) {
         var s = ISL_SIGNS[g];
-        seq.push({ gloss: g, icon: s.icon, hi: s.hi, desc: s.desc, anim: s.anim, dir: s.dir });
+        seq.push({ gloss: g, icon: s.icon, hi: s.hi, desc: s.desc, anim: s.anim, dir: s.dir, fingers: [1,1,1,1,1], badge: s.icon });
+      } else if (/[\u0900-\u097F]/.test(tok)) {
+        // Hindi Devanagari word not in dictionary -> per-akshar Devanagari ISL flashcards
+        var akshars = tok.match(/[\u0900-\u097F][\u093E-\u094D\u0902\u0903]?/g) || [tok];
+        akshars.slice(0, 5).forEach(function (ak, idx) {
+          var code = ak.charCodeAt(0);
+          seq.push({
+            gloss: ak, icon: ak, hi: 'अक्षर "' + ak + '"',
+            desc: 'Hindi Akshar flashcard "' + ak + '" (phonetic ISL sign)',
+            anim: 'anim-pulse', dir: 'हिन्दी', isAlpha: true, badge: ak,
+            fingers: [code % 2, (code >> 1) % 2, 1, (code >> 2) % 2, (idx % 2)]
+          });
+        });
       } else {
         var chars = tok.replace(/[^a-z0-9]/g, '').slice(0, 6).toUpperCase().split('');
-        if (chars.length) {
-          chars.forEach(function (ch) {
-            seq.push({
-              gloss: ch, icon: '🤟', hi: 'अक्षर ' + ch,
-              desc: 'ISL Fingerspelling letter "' + ch + '"', anim: 'anim-pulse', dir: 'FS:' + ch
-            });
+        chars.forEach(function (ch) {
+          var a = ISL_ALPHA[ch];
+          seq.push({
+            gloss: ch, icon: ch, hi: 'Letter ' + ch,
+            desc: a ? a[0] : ('Number/Symbol "' + ch + '" handshape'),
+            anim: 'anim-pulse', dir: 'ISL:' + ch, isAlpha: true, badge: ch,
+            fingers: a ? a[1] : [1, (Number(ch) > 1 ? 1 : 0), (Number(ch) > 2 ? 1 : 0), (Number(ch) > 3 ? 1 : 0), (Number(ch) > 4 ? 1 : 0)]
           });
-        } else {
-          seq.push({ gloss: tok.slice(0, 10).toUpperCase(), icon: '💬', hi: tok, desc: 'Visual word card: ' + tok, anim: 'anim-pulse', dir: 'WORD' });
-        }
+        });
       }
     });
-    if (!seq.length) seq.push({ gloss: 'HELLO', icon: '🙏', hi: 'नमस्ते', desc: ISL_SIGNS.HELLO.desc, anim: 'anim-nod', dir: '↕ BOW' });
+    if (!seq.length) seq.push({ gloss: 'HELLO', icon: '🙏', hi: 'नमस्ते', desc: ISL_SIGNS.HELLO.desc, anim: 'anim-nod', dir: '↕ BOW', fingers: [1,1,1,1,1], badge: '🙏' });
     return seq.slice(0, 10);
   }
 
@@ -528,9 +597,9 @@
 
     var stage = document.createElement('div'); stage.className = 'isl-stage';
     var gbox = document.createElement('div'); gbox.className = 'isl-glyph-box';
-    var emoji = document.createElement('span'); emoji.className = 'isl-emoji';
+    var svgWrap = document.createElement('div'); svgWrap.className = 'isl-emoji'; svgWrap.style.width = '100%'; svgWrap.style.height = '100%';
     var mtag = document.createElement('span'); mtag.className = 'isl-motion-tag';
-    gbox.appendChild(emoji); gbox.appendChild(mtag);
+    gbox.appendChild(svgWrap); gbox.appendChild(mtag);
 
     var details = document.createElement('div'); details.style.minWidth = '0';
     var title = document.createElement('div'); title.className = 'isl-word-title';
@@ -542,14 +611,14 @@
     var row = document.createElement('div');
     row.style.display = 'flex'; row.style.gap = '.5rem'; row.style.alignItems = 'center'; row.style.flexWrap = 'wrap';
     var replay = document.createElement('button'); replay.type = 'button'; replay.className = 'btn sm ghost'; replay.textContent = '↻ Replay Signs';
-    var attr = document.createElement('span'); attr.className = 'isl-attr'; attr.textContent = 'ISL Sign Cards · ISLRTC / AI4Bharat INCLUDE';
+    var attr = document.createElement('span'); attr.className = 'isl-attr'; attr.textContent = 'ISL Flashcards · ISLRTC / AI4Bharat INCLUDE';
     row.appendChild(replay); row.appendChild(attr);
 
     var timerId = null;
     function showIndex(idx) {
       var item = seq[idx];
       gbox.className = 'isl-glyph-box ' + item.anim;
-      emoji.textContent = item.icon;
+      svgWrap.innerHTML = renderFlashcardSvg(item);
       mtag.textContent = item.dir;
       title.textContent = item.gloss + ' · ' + item.hi;
       cap.textContent = item.desc;
@@ -559,7 +628,7 @@
     var cardEls = seq.map(function (item, idx) {
       var b = document.createElement('button');
       b.type = 'button'; b.className = 'isl-card-mini';
-      b.textContent = item.icon + ' ' + item.gloss;
+      b.textContent = (item.isAlpha ? '' : item.icon + ' ') + item.gloss;
       b.onclick = function () {
         if (timerId) clearInterval(timerId);
         showIndex(idx);
