@@ -33,6 +33,7 @@
     root.style.setProperty('--fs', (16 * (prefs.fontScale || 1)).toFixed(2) + 'px');
     root.setAttribute('data-contrast', prefs.contrast === 'high' ? 'high' : 'normal');
     if ($('#f-name')) $('#f-name').value = prefs.name || '';
+    if (prefs.lang !== 'hi-IN' && prefs.lang !== 'en-IN') prefs.lang = 'hi-IN';
     if ($('#sel-lang')) $('#sel-lang').value = prefs.lang;
     if ($('#studio-lang')) $('#studio-lang').value = prefs.lang;
     if ($('#chk-speak')) $('#chk-speak').checked = prefs.input.indexOf('speech') > -1;
@@ -164,7 +165,7 @@
       r.interimResults = !!onInterim;
       r.continuous = false;
       r.maxAlternatives = 3;
-      var text = '', conf = 0, finished = false;
+      var text = '', lastInterim = '', conf = 0, finished = false;
       listening = true; rec = r;
 
       r.onresult = function (ev) {
@@ -176,15 +177,17 @@
             for (var k = 0; k < res.length; k++) conf = Math.max(conf, res[k].confidence || 0);
           } else { interim += res[0].transcript; }
         }
-        if (onInterim) onInterim((text + interim).trim(), false);
+        lastInterim = (text + interim).trim();
+        if (onInterim) onInterim(lastInterim, false);
       };
       r.onerror = function (e) {
         if (finished) return; finished = true; listening = false;
-        reject(new Error(e.error || 'speech-error'));
+        if (lastInterim) resolve({ text: lastInterim, confidence: conf });
+        else reject(new Error(e.error || 'speech-error'));
       };
       r.onend = function () {
         if (finished) return; finished = true; listening = false;
-        resolve({ text: text.trim(), confidence: conf });
+        resolve({ text: (text.trim() || lastInterim), confidence: conf });
       };
       try { r.start(); } catch (e) { listening = false; reject(e); }
     });
@@ -461,7 +464,7 @@
 
   /* ---------------- Text -> ISL Glossifier & Per-Word/Letter SVG Flashcards ---------------- */
   var ISL_STOP = {
-    is: 1, am: 1, are: 1, was: 1, were: 1, the: 1, a: 1, an: 1, to: 1, for: 1, of: 1, in: 1, on: 1, at: 1,
+    is: 1, am: 1, was: 1, were: 1, the: 1, a: 1, an: 1, to: 1, for: 1, of: 1, in: 1, on: 1, at: 1,
     हूँ: 1, हूं: 1, है: 1, हैं: 1, था: 1, थी: 1, को: 1, का: 1, की: 1, के: 1, में: 1, से: 1, पर: 1, पास: 1
   };
 
@@ -663,6 +666,7 @@
 
   function mountIslPlayer(host, text, autoPlay) {
     if (!host) return;
+    if (host._islTimer) { clearInterval(host._islTimer); host._islTimer = null; }
     host.textContent = '';
     var seq = textToIslSequence(text);
     var wrap = document.createElement('div'); wrap.className = 'isl-player';
@@ -731,13 +735,13 @@
     host.appendChild(wrap);
 
     function run() {
-      if (timerId) clearInterval(timerId);
+      if (host._islTimer) { clearInterval(host._islTimer); host._islTimer = null; }
       var i = 0;
       showIndex(0);
       if (seq.length <= 1) return;
-      timerId = setInterval(function () {
+      host._islTimer = setInterval(function () {
         i += 1;
-        if (i >= seq.length) { clearInterval(timerId); timerId = null; return; }
+        if (i >= seq.length) { clearInterval(host._islTimer); host._islTimer = null; return; }
         showIndex(i);
       }, 1300);
     }
@@ -783,7 +787,13 @@
     setTranscript('Listening…', true);
     announce('Listening. Speak now.');
 
-    listen({ lang: prefs.lang }, function (t, fin) { setTranscript(t, true); })
+    listen({ lang: prefs.lang }, function (t) {
+      setTranscript(t, true);
+      if (t) {
+        pending = { text: t, confidence: null };
+        $('#speak-actions').classList.remove('hidden');
+      }
+    })
       .then(function (res) {
         btn.setAttribute('aria-pressed', 'false');
         var text = res.text;
@@ -1217,8 +1227,12 @@
     // speak
     if ($('#btn-mic')) $('#btn-mic').onclick = function () { if (listening) { stopListen(); return; } startMic(); };
     if ($('#btn-send-speak')) $('#btn-send-speak').onclick = function () {
-      if (!pending || !pending.text) { announce('Nothing to send yet.'); return; }
-      send({ text: pending.text, modality: 'speech', confidence: pending.confidence });
+      var fallback = ($('#transcript') && $('#transcript').textContent) || '';
+      if (fallback === 'Your spoken words will appear here…' || fallback === 'Listening…') fallback = '';
+      var txt = (pending && pending.text) || fallback.trim();
+      if (!txt) { announce('Nothing to send yet.'); return; }
+      if (listening) stopListen();
+      send({ text: txt, modality: 'speech', confidence: (pending && pending.confidence) || null });
       resetSpeak();
       tab('speak');
     };
