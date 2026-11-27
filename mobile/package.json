@@ -10,7 +10,6 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@sanket/shared": "file:../packages/shared",
     "expo": "~58.1.0",
     "expo-camera": "~58.0.14",
     "expo-haptics": "~14.0.0",

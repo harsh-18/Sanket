@@ -21,7 +21,7 @@ import {
   ISL_SIGNS,
   SANKET_COLORS,
   SUPPORTED_LANGUAGES,
-} from '@sanket/shared';
+} from './src/shared';
 import { IslVisualizer } from './src/IslVisualizer';
 
 type Screen = 'onboarding' | 'home' | 'nearby' | 'conversation' | 'accessibility' | 'calls';

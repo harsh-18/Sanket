@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { SANKET_COLORS, textToIslSequence } from '@sanket/shared';
+import { SANKET_COLORS, textToIslSequence } from './shared';
 
 interface Props {
   text: string;

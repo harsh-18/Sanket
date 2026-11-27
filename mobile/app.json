@@ -15,7 +15,8 @@
       "deploymentTarget": "15.1",
       "infoPlist": {
         "NSCameraUsageDescription": "Sanket uses your camera only when you choose to scan a Nearby pairing QR code or sign in Indian Sign Language.",
-        "NSMicrophoneUsageDescription": "Sanket uses your microphone only when you tap Speak to transcribe speech for your conversation partner."
+        "NSMicrophoneUsageDescription": "Sanket uses your microphone only when you tap Speak to transcribe speech for your conversation partner.",
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
@@ -38,6 +39,12 @@
           "cameraPermission": "Allow Sanket to access your camera for QR pairing and Indian Sign Language input."
         }
       ]
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "6ee7db81-43cd-4de2-b1f4-9c2a881d311a"
+      }
+    },
+    "owner": "harsh-18"
   }
 }
