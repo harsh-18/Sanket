@@ -313,6 +313,24 @@ input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.15)}
 .msg .body{font-size:1.16rem;font-weight:600;word-break:break-word;color:#fff}
 .msg .alt{font-size:.94rem;color:var(--muted);margin-top:.45rem;font-weight:400}
 .msg .acts{display:flex;gap:.5rem;margin-top:.75rem;flex-wrap:wrap}
+.isl-player{
+  margin-top:.85rem;padding:.75rem;border-radius:14px;background:rgba(5,9,22,0.85);
+  border:1px solid rgba(192,132,252,0.35);display:grid;grid-template-columns:168px 1fr;gap:.85rem;align-items:center;
+}
+@media(max-width:560px){.isl-player{grid-template-columns:1fr}}
+.isl-canvas{
+  width:168px;height:124px;border-radius:10px;background:radial-gradient(circle at 50% 30%,rgba(99,102,241,0.18),rgba(3,7,18,0.95));
+  border:1px solid rgba(255,255,255,0.1);display:block;
+}
+.isl-info{display:flex;flex-direction:column;gap:.45rem;min-width:0}
+.isl-seq{display:flex;flex-wrap:wrap;gap:.35rem}
+.isl-pill{
+  font-family:"JetBrains Mono",monospace;font-size:.7rem;font-weight:700;padding:.2rem .5rem;
+  border-radius:999px;background:rgba(255,255,255,0.08);color:var(--muted);border:1px solid rgba(255,255,255,0.1);
+}
+.isl-pill.active{background:#d8b4fe;color:#3b0764;border-color:transparent;box-shadow:0 0 12px rgba(216,180,254,0.45)}
+.isl-caption{font-size:.82rem;color:#e2e8f0;line-height:1.35}
+.isl-attr{font-size:.7rem;color:var(--muted)}
 .empty{color:var(--muted);text-align:center;padding:3rem .5rem;font-size:1rem}
 
 /* Composer Tabs */
