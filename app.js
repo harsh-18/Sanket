@@ -634,7 +634,7 @@
         seq.push({ gloss: g, icon: s.icon, hi: s.hi, desc: s.desc, anim: s.anim, dir: s.dir, badge: s.icon, shape: 'word' });
       } else if (/[\u0900-\u097F]/.test(tok)) {
         var akshars = tok.match(/(क्ष|ज्ञ|[\u0900-\u097F][\u093E-\u094D\u0902\u0903]?)/g) || [tok];
-        akshars.slice(0, 6).forEach(function (ak) {
+        akshars.forEach(function (ak) {
           var keyChar = (ak.indexOf('क्ष') === 0) ? 'क्ष' : (ak.indexOf('ज्ञ') === 0 ? 'ज्ञ' : ak.charAt(0));
           var hexKey = keyChar.split('').map(function (c) { return 'u' + c.charCodeAt(0).toString(16).padStart(4, '0'); }).join('_');
           var hint = HINDI_AKSHAR[keyChar] || ('Devanagari akshar "' + ak + '"');
@@ -645,7 +645,7 @@
           });
         });
       } else {
-        var chars = tok.replace(/[^a-z0-9]/g, '').slice(0, 6).toUpperCase().split('');
+        var chars = tok.replace(/[^a-z0-9]/g, '').toUpperCase().split('');
         chars.forEach(function (ch) {
           var a = ISL_ALPHA[ch];
           seq.push({
@@ -658,7 +658,7 @@
       }
     });
     if (!seq.length) seq.push({ gloss: 'HELLO', icon: '🙏', hi: 'नमस्ते', desc: ISL_SIGNS.HELLO.desc, anim: 'anim-nod', dir: '↕ BOW', badge: '🙏', shape: 'word' });
-    return seq.slice(0, 10);
+    return seq.slice(0, 80);
   }
 
   function mountIslPlayer(host, text, autoPlay) {
