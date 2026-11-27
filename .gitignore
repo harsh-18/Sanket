@@ -1,0 +1,22 @@
+# Secrets & environment variables (never commit)
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.secret
+secrets.json
+credentials.json
+bhashini-keys*
+
+# OS & editor files
+.DS_Store
+Thumbs.db
+*.swp
+
+# Local build / temp artifacts
+_site/
+__pycache__/
+*.pyc
+node_modules/

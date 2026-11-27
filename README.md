@@ -94,23 +94,31 @@ Continuous ISL translation · Signing avatars · All 22 Indian languages · Brai
 
 ---
 
-## Project Structure
+## Project Structure & Code Documentation
 
 ```text
 Sanket/
-├── README.md                 # This file
-├── LICENSE
+├── README.md                 # Project overview, run guide, and file documentation
+├── LICENSE                   # Open-source license
+├── Dockerfile                # Lightweight nginx:alpine container serving src/
+├── docker-compose.yml        # One-command startup (http://localhost:8080, zero keys needed)
+├── .dockerignore             # Excludes docs/git metadata from Docker build context
+├── .gitignore                # Prevents committing .env, keys, secrets, or temp artifacts
 ├── src/
-│   ├── index.html            # UI markup, styling, all screens
-│   └── app.js                # Front-end logic (speech, camera, messaging, accessibility)
+│   ├── index.html            # Accessible UI markup, 2026 responsive CSS, onboarding, room, ISL cards, Accuracy Lab
+│   └── app.js                # Core JS engine: Web Speech STT/TTS, voice commands, BroadcastChannel sync,
+│                             # MediaPipe handshape classifier, 24-pair phrasebook, Levenshtein WER lab, export
 ├── assets/
-│   └── README.md             # Placeholder for ISL videos, icons, fonts
+│   └── README.md             # Placeholder for ISL reference videos, icons, and fonts
 ├── docs/
-│   ├── README.md
-│   └── PLAN_OF_ACTION.md     # Complete project plan, hackathon strategy, team responsibilities
+│   ├── README.md                          # Documentation index
+│   ├── PLAN_OF_ACTION.md                  # Complete project plan, hackathon strategy, team roles
+│   ├── DESIGN_SYSTEM_AND_INSPIRATION.md   # 2026 UI/UX study & cross-platform accessibility spec
+│   ├── BHASHINI_PRODUCT_DOCUMENT.md       # PRD & User Manual for BHASHINI (ULCA) API onboarding
+│   └── SANKET_PITCH_DECK.md               # Hackathon pitch deck (Problem, Users, Dependencies, Launch Plan)
 └── .github/
     └── workflows/
-        └── pages.yml         # GitHub Pages deployment
+        └── pages.yml         # GitHub Pages deployment workflow
 ```
 
 ---
