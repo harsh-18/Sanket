@@ -87,18 +87,18 @@ export function textToIslSequence(text: string): IslSequenceToken[] {
     if (g) {
       seq.push({ gloss: g, ...ISL_SIGNS[g] });
     } else if (/[\u0900-\u097F]/.test(tok)) {
-      const akshars = tok.match(/[\u0900-\u097F][\u093E-\u094D\u0902\u0903]?/g) || [tok];
-      akshars.slice(0, 5).forEach((ak) => seq.push({
+      const akshars = tok.match(/(क्ष|ज्ञ|[\u0900-\u097F][\u093E-\u094D\u0902\u0903]?)/g) || [tok];
+      akshars.forEach((ak) => seq.push({
         gloss: ak, icon: ak, hi: `अक्षर "${ak}"`,
         desc: `Hindi Akshar "${ak}" ISL flashcard`, anim: 'anim-pulse', dir: 'हिन्दी',
       }));
     } else {
-      const chars = tok.replace(/[^a-z0-9]/g, '').slice(0, 6).toUpperCase().split('');
+      const chars = tok.replace(/[^a-z0-9]/g, '').toUpperCase().split('');
       chars.forEach((ch) => seq.push({
         gloss: ch, icon: ch, hi: `Letter ${ch}`,
         desc: ISL_ALPHA_DESC[ch] || `Number "${ch}" handshape`, anim: 'anim-pulse', dir: `ISL:${ch}`,
       }));
     }
   }
-  return seq.length ? seq.slice(0, 10) : [{ gloss: 'HELLO', ...ISL_SIGNS.HELLO }];
+  return seq.length ? seq.slice(0, 80) : [{ gloss: 'HELLO', ...ISL_SIGNS.HELLO }];
 }
