@@ -11,8 +11,8 @@
   };
 
   var DEFAULT_PREFS = {
-    name: '', input: ['speech', 'text'], output: ['text', 'audio'],
-    lang: 'hi-IN', fontScale: 1, contrast: 'normal', haptics: true, rate: 1
+    name: '', input: ['speech', 'text'], output: ['text', 'sign', 'audio'],
+    lang: 'hi-IN', fontScale: 1, contrast: 'normal', haptics: true, rate: 1, captions: true
   };
   var prefs = Object.assign({}, DEFAULT_PREFS, store.get('prefs', {}));
 
@@ -20,41 +20,52 @@
   var room = null;
   var msgs = [];
   var peers = {};
+  var paused = false;
+  var ws = null;
   var bc = ('BroadcastChannel' in window) ? new BroadcastChannel('sanket-v1') : null;
 
   /* ---------------- accessibility plumbing ---------------- */
-  function announce(t) { var l = $('#live'); if (l) { l.textContent = ''; setTimeout(function () { l.textContent = t; }, 40); } }
-  function banner(t) { var b = $('#banner'); if (!b) return; if (t) { b.textContent = t; b.classList.remove('hidden'); } else { b.classList.add('hidden'); } }
+  function announce(t) { var l = $('#sr-live'); if (l) { l.textContent = ''; setTimeout(function () { l.textContent = t; }, 40); } }
+  function banner(t) { if (t) announce(t); }
 
   function applyPrefs() {
     var root = document.documentElement;
     root.style.setProperty('--fs', (16 * (prefs.fontScale || 1)).toFixed(2) + 'px');
     root.setAttribute('data-contrast', prefs.contrast === 'high' ? 'high' : 'normal');
     if ($('#f-name')) $('#f-name').value = prefs.name || '';
+    if (prefs.lang !== 'hi-IN' && prefs.lang !== 'en-IN') prefs.lang = 'hi-IN';
     if ($('#sel-lang')) $('#sel-lang').value = prefs.lang;
+    if ($('#studio-lang')) $('#studio-lang').value = prefs.lang;
     if ($('#chk-speak')) $('#chk-speak').checked = prefs.input.indexOf('speech') > -1;
     if ($('#chk-sign')) $('#chk-sign').checked = prefs.input.indexOf('sign') > -1;
     if ($('#chk-type')) $('#chk-type').checked = prefs.input.indexOf('text') > -1;
     if ($('#chk-text')) $('#chk-text').checked = prefs.output.indexOf('text') > -1;
+    if ($('#chk-out-sign')) $('#chk-out-sign').checked = prefs.output.indexOf('sign') > -1;
     if ($('#chk-audio')) $('#chk-audio').checked = prefs.output.indexOf('audio') > -1;
     if ($('#rng-font')) { $('#rng-font').value = Math.round((prefs.fontScale || 1) * 100); $('#out-font').value = Math.round((prefs.fontScale || 1) * 100) + '%'; }
     if ($('#rng-rate')) { $('#rng-rate').value = prefs.rate; $('#out-rate').value = Number(prefs.rate).toFixed(1) + '\u00d7'; }
     if ($('#chk-contrast')) $('#chk-contrast').checked = prefs.contrast === 'high';
     if ($('#chk-haptics')) $('#chk-haptics').checked = !!prefs.haptics;
     if ($('#out-chip')) $('#out-chip').textContent = prefs.output.length ? prefs.output.join(' + ') : 'text';
-    if ($('#lang-chip')) $('#lang-chip').textContent = prefs.lang === 'hi-IN' ? 'हिन्दी' : 'English';
+    var LANG_LABELS = { 'hi-IN': 'हिन्दी', 'en-IN': 'English', 'ta-IN': 'தமிழ்', 'te-IN': 'తెలుగు', 'mr-IN': 'मराठी', 'bn-IN': 'বাংলা', 'kn-IN': 'ಕನ್ನಡ', 'gu-IN': 'ગુજરાતી' };
+    var ltext = LANG_LABELS[prefs.lang] || prefs.lang;
+    if ($('#lang-chip')) $('#lang-chip').textContent = ltext;
+    if ($('#home-lang-chip')) $('#home-lang-chip').textContent = '🇮🇳 ' + ltext;
+    if ($('#guest-name')) $('#guest-name').textContent = prefs.name || 'Guest User';
+    if ($('#guest-avatar')) $('#guest-avatar').textContent = (prefs.name || 'G').slice(0, 1).toUpperCase();
+    if ($('#guest-prefs-summary')) $('#guest-prefs-summary').textContent = (prefs.input.join('+') || 'text') + ' · ' + ltext;
     store.set('prefs', prefs);
   }
 
   function show(id) {
-    $$('.screen').forEach(function (s) { s.classList.add('hidden'); });
-    var el = $('#screen-' + id);
-    if (!el) return;
-    el.classList.remove('hidden');
-    var h = el.querySelector('h1');
+    var target = $('#view-' + id);
+    if (!target) return;
+    $$('.view').forEach(function (v) { v.classList.add('hidden'); });
+    target.classList.remove('hidden');
+    $$('[data-nav]').forEach(function (b) { b.classList.toggle('active', b.getAttribute('data-nav') === id); });
+    var h = target.querySelector('h1, h2');
     if (h) { h.setAttribute('tabindex', '-1'); h.focus({ preventScroll: true }); }
     window.scrollTo({ top: 0, behavior: 'smooth' });
-    if (id === 'lab') labRender();
   }
 
   /* ---------------- speech output ---------------- */
@@ -154,7 +165,7 @@
       r.interimResults = !!onInterim;
       r.continuous = false;
       r.maxAlternatives = 3;
-      var text = '', conf = 0, finished = false;
+      var text = '', lastInterim = '', conf = 0, finished = false;
       listening = true; rec = r;
 
       r.onresult = function (ev) {
@@ -166,15 +177,17 @@
             for (var k = 0; k < res.length; k++) conf = Math.max(conf, res[k].confidence || 0);
           } else { interim += res[0].transcript; }
         }
-        if (onInterim) onInterim((text + interim).trim(), false);
+        lastInterim = (text + interim).trim();
+        if (onInterim) onInterim(lastInterim, false);
       };
       r.onerror = function (e) {
         if (finished) return; finished = true; listening = false;
-        reject(new Error(e.error || 'speech-error'));
+        if (lastInterim) resolve({ text: lastInterim, confidence: conf });
+        else reject(new Error(e.error || 'speech-error'));
       };
       r.onend = function () {
         if (finished) return; finished = true; listening = false;
-        resolve({ text: text.trim(), confidence: conf });
+        resolve({ text: (text.trim() || lastInterim), confidence: conf });
       };
       try { r.start(); } catch (e) { listening = false; reject(e); }
     });
@@ -196,17 +209,57 @@
       bc.postMessage({ type: 'hello', room: room, me: myCard() });
       bc.postMessage({ type: 'sync-request', room: room, from: ME });
     }
-    $('#room-label').textContent = room;
+    connectSocket(room);
+    if ($('#room-badge')) $('#room-badge').textContent = room;
+    if ($('#side-status-text')) $('#side-status-text').textContent = 'Connected · ' + room;
     render();
     renderPeers();
-    show('session');
-    announce('Joined room ' + room.split('').join(' ') + '. Conversation screen.');
+    announce('Joined room ' + room.split('').join(' ') + '.');
     return true;
   }
 
+  function handleIncoming(d) {
+    if (!d || !room || d.room !== room) return;
+    if (d.type === 'msg' && d.msg && d.msg.from !== ME) {
+      if (pushMessage(d.msg)) { render(); deliver(d.msg); }
+    } else if (d.type === 'hello' && d.me && d.me.id !== ME) {
+      peers[d.me.id] = d.me; renderPeers();
+      relay({ type: 'here', room: room, me: myCard() });
+    } else if (d.type === 'here' && d.me) {
+      peers[d.me.id] = d.me; renderPeers();
+    } else if (d.type === 'bye') {
+      delete peers[d.from]; renderPeers();
+    } else if (d.type === 'sync-request' && d.from !== ME) {
+      relay({ type: 'sync-data', room: room, msgs: msgs.slice(-40) });
+    } else if (d.type === 'sync-data' && Array.isArray(d.msgs)) {
+      var added = false;
+      d.msgs.forEach(function (m) { if (m && m.from !== ME && pushMessage(m)) added = true; });
+      if (added) render();
+    }
+  }
+
+  function relay(payload) {
+    if (bc) bc.postMessage(payload);
+    if (ws && ws.readyState === 1) { try { ws.send(JSON.stringify(payload)); } catch (e) {} }
+  }
+
+  function connectSocket(code) {
+    if (ws) { try { ws.close(); } catch (e) {} ws = null; }
+    if (!/^https?:$/.test(location.protocol) || /github\.io$/i.test(location.hostname)) return;
+    try {
+      var proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+      ws = new WebSocket(proto + '//' + location.host + '/ws/' + encodeURIComponent(code));
+      ws.onopen = function () { relay({ type: 'hello', room: code, me: myCard() }); };
+      ws.onmessage = function (ev) { try { handleIncoming(JSON.parse(ev.data)); } catch (e) {} };
+      ws.onerror = function () {};
+    } catch (e) {}
+  }
+
   function leaveRoom() {
-    if (bc && room) bc.postMessage({ type: 'bye', room: room, from: ME });
+    if (room) relay({ type: 'bye', room: room, from: ME });
+    if (ws) { try { ws.close(); } catch (e) {} ws = null; }
     room = null; msgs = []; peers = {};
+    if ($('#side-status-text')) $('#side-status-text').textContent = 'Ready to Connect';
     show('home');
     announce('Left the room.');
   }
@@ -221,6 +274,7 @@
 
   function send(payload) {
     if (!room) { announce('Join a room first.'); return; }
+    if (paused) { announce('Session is paused. Resume to send.'); return; }
     var m = {
       id: ME + '-' + Date.now() + '-' + Math.random().toString(36).slice(2, 5),
       from: ME, name: prefs.name || 'Guest', lang: prefs.lang,
@@ -230,31 +284,12 @@
     };
     pushMessage(m);
     render();
-    if (bc) bc.postMessage({ type: 'msg', room: room, msg: m });
+    relay({ type: 'msg', room: room, msg: m });
     announce('Message sent.');
   }
 
   if (bc) {
-    bc.onmessage = function (ev) {
-      var d = ev.data || {};
-      if (!room || d.room !== room) return;
-      if (d.type === 'msg' && d.msg && d.msg.from !== ME) {
-        if (pushMessage(d.msg)) { render(); deliver(d.msg); }
-      } else if (d.type === 'hello' && d.me && d.me.id !== ME) {
-        peers[d.me.id] = d.me; renderPeers();
-        bc.postMessage({ type: 'here', room: room, me: myCard() });
-      } else if (d.type === 'here' && d.me) {
-        peers[d.me.id] = d.me; renderPeers();
-      } else if (d.type === 'bye') {
-        delete peers[d.from]; renderPeers();
-      } else if (d.type === 'sync-request' && d.from !== ME) {
-        bc.postMessage({ type: 'sync-data', room: room, msgs: msgs.slice(-40) });
-      } else if (d.type === 'sync-data' && Array.isArray(d.msgs)) {
-        var added = false;
-        d.msgs.forEach(function (m) { if (m && m.from !== ME && pushMessage(m)) added = true; });
-        if (added) render();
-      }
-    };
+    bc.onmessage = function (ev) { handleIncoming(ev.data || {}); };
   }
 
   function deliver(m) {
@@ -336,14 +371,32 @@
       sp.setAttribute('aria-label', 'Speak this message aloud');
       sp.onclick = function () { speak(alt || m.text, prefs.lang); };
       acts.appendChild(sp);
+
+      var islBtn = document.createElement('button');
+      islBtn.type = 'button'; islBtn.className = 'btn sm ghost';
+      islBtn.textContent = '🤟 Play ISL';
+      islBtn.setAttribute('aria-label', 'Play Indian Sign Language animation for this message');
+      acts.appendChild(islBtn);
+
       if (m.modality === 'sign-card' && m.gloss) {
         var g = document.createElement('span');
         g.className = 'chip'; g.textContent = 'gloss: ' + m.gloss;
         acts.appendChild(g);
       }
       art.appendChild(acts);
+
+      var islHost = document.createElement('div');
+      art.appendChild(islHost);
+      var autoSign = prefs.output.indexOf('sign') > -1 && m.id === msgs[msgs.length - 1].id;
+      islBtn.onclick = function () { mountIslPlayer(islHost, alt || m.text, true); };
+      if (autoSign) mountIslPlayer(islHost, m.text, !mine);
+
       box.appendChild(art);
     });
+    if ($('#partner-isl-spotlight') && msgs.length) {
+      var latest = msgs[msgs.length - 1];
+      mountIslPlayer($('#partner-isl-spotlight'), latest.text, true);
+    }
     box.scrollTop = box.scrollHeight;
   }
 
@@ -409,6 +462,295 @@
     });
   }
 
+  /* ---------------- Text -> ISL Glossifier & Per-Word/Letter SVG Flashcards ---------------- */
+  var ISL_STOP = {
+    is: 1, am: 1, was: 1, were: 1, the: 1, a: 1, an: 1, to: 1, for: 1, of: 1, in: 1, on: 1, at: 1,
+    हूँ: 1, हूं: 1, है: 1, हैं: 1, था: 1, थी: 1, को: 1, का: 1, की: 1, के: 1, में: 1, से: 1, पर: 1, पास: 1
+  };
+
+  var ISL_SIGNS = {
+    HELLO:      { words: ['hello','hi','namaste','नमस्ते','नमस्कार'], icon: '🙏', hi: 'नमस्ते', desc: 'Join both palms at chest & bow slightly', anim: 'anim-nod', dir: '↕ BOW', pose: 'palms-join' },
+    ME:         { words: ['i','me','my','myself','main','mujhe','मैं','मुझे','मेरा'], icon: '👆', hi: 'मैं / मुझे', desc: 'Point index finger toward your chest', anim: 'anim-in', dir: '← CHEST', pose: 'point-self' },
+    GO:         { words: ['go','going','jaana','jana','jao','जाना','जाओ','गया'], icon: '🚶', hi: 'जाना', desc: 'Move open hand forward away from body', anim: 'anim-out', dir: '→ GO', pose: 'sweep-out' },
+    YES:        { words: ['yes','haan','ok','okay','हाँ','हां'], icon: '👍', hi: 'हाँ', desc: 'Closed fist nodding forward twice', anim: 'anim-nod', dir: '↓ NOD', pose: 'fist-nod' },
+    NO:         { words: ['no','not','nahi','nahin','नहीं','ना'], icon: '☝️', hi: 'नहीं', desc: 'Index finger sweeping side-to-side', anim: 'anim-shake', dir: '⇄ SHAKE', pose: 'index-shake' },
+    THANK_YOU:  { words: ['thanks','thank','thankyou','dhanyavad','dhanyavaad','शुक्रिया','धन्यवाद'], icon: '🤲', hi: 'धन्यवाद', desc: 'Fingertips from chin moving outward', anim: 'anim-out', dir: '→ OUT', pose: 'chin-out' },
+    PLEASE:     { words: ['please','kripya','कृपया'], icon: '🫶', hi: 'कृपया', desc: 'Flat palm circling gently on chest', anim: 'anim-circle', dir: '↻ CIRCLE', pose: 'palm-circle' },
+    HELP:       { words: ['help','madad','बचाओ','मदद','सहायता'], icon: '🆘', hi: 'मदद', desc: 'Fist resting on flat palm, lifted together', anim: 'anim-lift', dir: '↑ LIFT', pose: 'fist-on-palm' },
+    WATER:      { words: ['water','paani','pani','पानी','जल'], icon: '💧', hi: 'पानी', desc: 'W-handshape tapped near lips twice', anim: 'anim-nod', dir: '👄 LIPS', pose: 'three-lips' },
+    DOCTOR:     { words: ['doctor','hospital','clinic','डॉक्टर','अस्पताल'], icon: '🩺', hi: 'डॉक्टर', desc: 'Two fingers tapping wrist pulse', anim: 'anim-pulse', dir: '💓 PULSE', pose: 'wrist-tap' },
+    MEDICINE:   { words: ['medicine','dawa','tablet','दवा','दवाई','गोली'], icon: '💊', hi: 'दवा', desc: 'Middle finger circling on opposite palm', anim: 'anim-circle', dir: '↻ PALM', pose: 'palm-circle' },
+    HOME:       { words: ['home','house','ghar','घर','मकान'], icon: '🏠', hi: 'घर', desc: 'Fingertips of both hands forming a roof peak', anim: 'anim-pulse', dir: '⌂ ROOF', pose: 'roof-peak' },
+    FOOD:       { words: ['food','eat','khana','खाना','भोजन','रोटी'], icon: '🍽️', hi: 'खाना', desc: 'Bunched fingertips brought toward mouth', anim: 'anim-in', dir: '👄 EAT', pose: 'to-mouth' },
+    NAME:       { words: ['name','naam','नाम'], icon: '🏷️', hi: 'नाम', desc: 'Two fingers tapping across opposite two fingers', anim: 'anim-nod', dir: '✕ TAP', pose: 'cross-tap' },
+    PHONE:      { words: ['phone','call','mobile','फ़ोन','फोन','कॉल'], icon: '📞', hi: 'फ़ोन', desc: 'Thumb & pinky held near ear and mouth', anim: 'anim-pulse', dir: '👂 EAR', pose: 'phone-ear' },
+    MONEY:      { words: ['money','rupees','paise','cash','पैसे','रुपये','नकद'], icon: '💵', hi: 'पैसे', desc: 'Rub thumb across fingertips twice', anim: 'anim-shake', dir: '⇄ RUB', pose: 'pinch-rub' },
+    UNDERSTOOD: { words: ['understood','understand','samajh','समझ'], icon: '💡', hi: 'समझ गया', desc: 'Index finger moving forward from temple', anim: 'anim-out', dir: '→ TEMPLE', pose: 'temple-out' },
+    GOODBYE:    { words: ['bye','goodbye','again','phir','फिर','अलविदा'], icon: '👋', hi: 'फिर मिलेंगे', desc: 'Open hand waving outward', anim: 'anim-shake', dir: '👋 WAVE', pose: 'wave-hand' },
+    SORRY:      { words: ['sorry','maaf','maafi','माफ़','माफ'], icon: '✊', hi: 'माफ़ कीजिए', desc: 'Closed fist circling on chest', anim: 'anim-circle', dir: '↻ CHEST', pose: 'fist-circle' },
+    ATTENTION:  { words: ['attention','listen','dhyan','ध्यान','सुनो'], icon: '👀', hi: 'ध्यान दीजिए', desc: 'Both flat hands framing sides of face', anim: 'anim-pulse', dir: '👀 FOCUS', pose: 'frame-face' },
+    WAIT:       { words: ['wait','ruko','minute','minutes','रुको','मिनट'], icon: '✋', hi: 'रुको', desc: 'Open palm held steady facing forward', anim: 'anim-pulse', dir: '✋ HOLD', pose: 'open-stop' },
+    WHERE:      { words: ['where','kahan','कहाँ','कहां'], icon: '❓', hi: 'कहाँ', desc: 'Both palms upturned, side-to-side question', anim: 'anim-shake', dir: '⇄ ASK', pose: 'palms-up' },
+    COME:       { words: ['come','aao','aaiye','आओ','आइए'], icon: '🫳', hi: 'आइए', desc: 'Open hand beckoning inward toward chest', anim: 'anim-in', dir: '← IN', pose: 'beckon-in' },
+    GATE:       { words: ['gate','door','outside','bahar','गेट','दरवाजा','बाहर'], icon: '🚪', hi: 'गेट / बाहर', desc: 'Both hands swinging open like doors', anim: 'anim-out', dir: '↔ OPEN', pose: 'doors-open' },
+    DELIVERY:   { words: ['delivery','order','parcel','package','zomato','swiggy','डिलीवरी','ऑर्डर'], icon: '📦', hi: 'डिलीवरी', desc: 'Both hands holding & handing parcel forward', anim: 'anim-out', dir: '→ HAND', pose: 'box-hand' },
+    NEED:       { words: ['need','want','chahiye','चाहिए','ज़रूरत'], icon: '🫴', hi: 'चाहिए', desc: 'Curved palm pulled downward toward body', anim: 'anim-in', dir: '↓ PULL', pose: 'pull-down' },
+    GOOD:       { words: ['good','great','accha','thik','theek','अच्छा','ठीक','बढ़िया'], icon: '👌', hi: 'अच्छा / ठीक', desc: 'Thumb & index circle / chin-to-palm out', anim: 'anim-out', dir: '✓ GOOD', pose: 'ok-hand' }
+  };
+
+  // Distinct two-handed ISL manual alphabet: [instruction, left-hand pose, right-hand pose, contact/shape type]
+  var ISL_ALPHA = {
+    A: ['Touch right index tip to left thumb tip', 'thumb-up', 'point', 'tip-touch'],
+    B: ['Form two thumb-index circles side-by-side (binoculars)', 'circle', 'circle', 'two-circle'],
+    C: ['Curve right thumb & index into an open C-arc', 'rest', 'c-arc', 'c-shape'],
+    D: ['Curve right index & thumb onto upright left index', 'index-up', 'c-arc', 'd-loop'],
+    E: ['Touch right index tip to upright left index tip', 'index-up', 'point', 'tip-touch'],
+    F: ['Cross right index & middle over left index & middle', 'two-up', 'two-cross', 'cross'],
+    G: ['Stack closed right fist directly atop closed left fist', 'fist', 'fist', 'stack'],
+    H: ['Slide flat right palm across open flat left palm', 'flat-palm', 'flat-palm', 'slide'],
+    I: ['Touch right index tip to left middle fingertip', 'mid-up', 'point', 'tip-touch'],
+    J: ['Slide right index down left middle finger onto palm', 'flat-palm', 'point', 'trace-down'],
+    K: ['Hook bent right index finger onto upright left index', 'index-up', 'hook', 'hook'],
+    L: ['Lay right index finger flat across open left palm', 'flat-palm', 'index-flat', 'lay-flat'],
+    M: ['Place three right fingers flat onto open left palm', 'flat-palm', 'three-down', 'three-on-palm'],
+    N: ['Place two right fingers flat onto open left palm', 'flat-palm', 'two-down', 'two-on-palm'],
+    O: ['Touch right index tip to left ring fingertip (O-ring)', 'ring-up', 'point', 'o-ring'],
+    P: ['Circle right thumb & index onto upright left index tip', 'index-up', 'circle', 'p-loop'],
+    Q: ['Hook right index into left thumb-index circle', 'circle', 'hook', 'q-hook'],
+    R: ['Curve right index finger onto open left palm', 'flat-palm', 'hook', 'lay-flat'],
+    S: ['Hook right little finger with left little finger', 'pinky-up', 'pinky-hook', 'hook'],
+    T: ['Point right index to lower edge of left palm', 'flat-palm', 'point', 'edge-touch'],
+    U: ['Point right index tip to left little fingertip', 'pinky-up', 'point', 'tip-touch'],
+    V: ['Place right V-fingers (index + middle) on left palm', 'flat-palm', 'v-up', 'v-on-palm'],
+    W: ['Interlock open fingers of both hands together', 'spread', 'spread', 'interlock'],
+    X: ['Cross both extended index fingers in an X', 'index-up', 'index-cross', 'x-cross'],
+    Y: ['Touch right index into web between left thumb & index', 'l-web', 'point', 'web-touch'],
+    Z: ['Rest right fingertips against upright left palm', 'flat-palm', 'flat-palm', 't-touch']
+  };
+
+  var HINDI_AKSHAR = {
+    'अ': 'Open palm facing forward, thumb tucked',
+    'आ': 'Open palm moving slightly outward (long vowel)',
+    'इ': 'Upright little finger held steady',
+    'ई': 'Upright little finger lifted upward',
+    'उ': 'Curved U-handshape with thumb & index',
+    'ऊ': 'Curved U-handshape swept outward',
+    'ए': 'Index & middle fingers together pointing up',
+    'ओ': 'Rounded O-handshape held at cheek level',
+    'क': 'Thumb & index pinched, three fingers raised',
+    'ख': 'Open spread hand with slight outward flick',
+    'ग': 'Downward curved fist with index & thumb',
+    'घ': 'Curved hand held near throat/chest',
+    'च': 'Curved C-handshape facing side',
+    'ज': 'Index & middle fingers pointing forward',
+    'ट': 'Bent index & middle hooked downward',
+    'ड': 'Curved fist rotated slightly',
+    'त': 'Index tip touching thumb tip, palm out',
+    'द': 'Two fingers extended forward, palm down',
+    'न': 'Two fingers resting on opposite palm',
+    'प': 'Flat palm facing down, fingers together',
+    'फ': 'Open palm flicked outward (aspirated)',
+    'ब': 'Flat hand held upright, thumb tucked',
+    'भ': 'Both palms cupped slightly forward',
+    'म': 'Three fingers resting on opposite palm',
+    'य': 'Thumb & little finger extended (Y-frame)',
+    'र': 'Crossed index & middle fingers',
+    'ल': 'Thumb & index forming an L-angle',
+    'व': 'Index & middle spread in a V-shape',
+    'श': 'Flat hand sweeping gently side-to-side',
+    'स': 'Closed fist with thumb across fingers',
+    'ह': 'Flat palm sliding across opposite palm'
+  };
+
+  var WORD_TO_GLOSS = {};
+  Object.keys(ISL_SIGNS).forEach(function (g) {
+    ISL_SIGNS[g].words.forEach(function (w) { WORD_TO_GLOSS[w] = g; });
+  });
+
+  function renderFlashcardSvg(item) {
+    var label = item.badge || item.gloss.slice(0, 3);
+    var shape = item.shape || 'word';
+    var accent = item.isAlpha ? '#6655D9' : '#0F6B48';
+    var left = '#20233B', right = accent;
+    var body = '';
+
+    if (shape === 'two-circle') {
+      body = '<circle cx="24" cy="38" r="11" fill="none" stroke="' + left + '" stroke-width="3.5"/>' +
+             '<circle cx="44" cy="38" r="11" fill="none" stroke="' + right + '" stroke-width="3.5"/>';
+    } else if (shape === 'c-shape') {
+      body = '<path d="M46 24 A15 15 0 1 0 46 52" fill="none" stroke="' + right + '" stroke-width="5" stroke-linecap="round"/>';
+    } else if (shape === 'x-cross' || shape === 'cross') {
+      body = '<line x1="20" y1="22" x2="48" y2="52" stroke="' + left + '" stroke-width="4.5" stroke-linecap="round"/>' +
+             '<line x1="48" y1="22" x2="20" y2="52" stroke="' + right + '" stroke-width="4.5" stroke-linecap="round"/>';
+    } else if (shape === 'slide' || shape === 't-touch') {
+      body = '<rect x="14" y="42" width="40" height="12" rx="5" fill="' + left + '" opacity="0.22" stroke="' + left + '" stroke-width="2.5"/>' +
+             '<rect x="20" y="24" width="28" height="12" rx="5" fill="' + right + '" opacity="0.3" stroke="' + right + '" stroke-width="2.5"/>' +
+             '<path d="M22 20 L46 20 M42 16 L46 20 L42 24" fill="none" stroke="' + right + '" stroke-width="2.2" stroke-linecap="round"/>';
+    } else if (shape === 'interlock') {
+      body = '<path d="M18 28 L34 42 M24 24 L40 38 M30 22 L46 36" stroke="' + left + '" stroke-width="3.5" stroke-linecap="round"/>' +
+             '<path d="M50 28 L34 42 M44 24 L28 38 M38 22 L22 36" stroke="' + right + '" stroke-width="3.5" stroke-linecap="round"/>';
+    } else if (shape === 'o-ring' || shape === 'd-loop' || shape === 'p-loop' || shape === 'q-hook') {
+      body = '<line x1="22" y1="54" x2="22" y2="22" stroke="' + left + '" stroke-width="4" stroke-linecap="round"/>' +
+             '<circle cx="38" cy="34" r="10" fill="none" stroke="' + right + '" stroke-width="3.5"/>' +
+             '<circle cx="22" cy="22" r="3" fill="' + right + '"/>';
+    } else if (shape === 'stack') {
+      body = '<rect x="20" y="42" width="28" height="16" rx="6" fill="' + left + '" opacity="0.25" stroke="' + left + '" stroke-width="2.5"/>' +
+             '<rect x="20" y="22" width="28" height="16" rx="6" fill="' + right + '" opacity="0.3" stroke="' + right + '" stroke-width="2.5"/>';
+    } else if (shape === 'web-touch') {
+      body = '<path d="M18 52 L18 24 M18 44 L34 32" stroke="' + left + '" stroke-width="4.5" stroke-linecap="round"/>' +
+             '<line x1="50" y1="26" x2="26" y2="38" stroke="' + right + '" stroke-width="4" stroke-linecap="round"/>' +
+             '<circle cx="26" cy="38" r="3.5" fill="' + right + '"/>';
+    } else if (shape === 'v-on-palm') {
+      body = '<rect x="14" y="44" width="40" height="12" rx="5" fill="' + left + '" opacity="0.22" stroke="' + left + '" stroke-width="2.5"/>' +
+             '<path d="M34 44 L24 22 M34 44 L44 22" stroke="' + right + '" stroke-width="4" stroke-linecap="round"/>';
+    } else if (shape === 'two-on-palm' || shape === 'three-on-palm' || shape === 'lay-flat') {
+      var cnt = shape === 'three-on-palm' ? 3 : (shape === 'two-on-palm' ? 2 : 1);
+      var lines = '';
+      for (var k = 0; k < cnt; k++) lines += '<line x1="' + (26 + k * 8) + '" y1="22" x2="' + (26 + k * 8) + '" y2="42" stroke="' + right + '" stroke-width="3.8" stroke-linecap="round"/>';
+      body = '<rect x="14" y="42" width="40" height="13" rx="5" fill="' + left + '" opacity="0.22" stroke="' + left + '" stroke-width="2.5"/>' + lines;
+    } else if (shape === 'hook' || shape === 'trace-down' || shape === 'tip-touch' || shape === 'edge-touch') {
+      body = '<line x1="22" y1="54" x2="22" y2="24" stroke="' + left + '" stroke-width="4.5" stroke-linecap="round"/>' +
+             '<path d="M48 28 Q34 22 24 28" fill="none" stroke="' + right + '" stroke-width="4" stroke-linecap="round"/>' +
+             '<circle cx="24" cy="28" r="3" fill="' + right + '"/>';
+    } else {
+      // Hindi akshar or word flashcard
+      body = '<rect x="14" y="22" width="40" height="36" rx="10" fill="' + accent + '" opacity="0.16" stroke="' + accent + '" stroke-width="2"/>' +
+             '<text x="34" y="47" text-anchor="middle" font-family="Inter,Noto Sans Devanagari,sans-serif" font-size="22" font-weight="800" fill="#20233B">' + label + '</text>';
+    }
+
+    return '<svg viewBox="0 0 68 68" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
+      body +
+      '<rect x="2" y="2" width="24" height="16" rx="6" fill="#20233B"/>' +
+      '<text x="14" y="13" text-anchor="middle" font-family="Inter,Noto Sans Devanagari,sans-serif" font-size="10" font-weight="800" fill="#FFFFFF">' + label + '</text>' +
+      '</svg>';
+  }
+
+  function textToIslSequence(text) {
+    var clean = String(text || '').toLowerCase().replace(/[?!.,।:;'"()]/g, ' ').trim();
+    if (!clean) return [{ gloss: 'HELLO', icon: '🙏', hi: 'नमस्ते', desc: ISL_SIGNS.HELLO.desc, anim: 'anim-nod', dir: '↕ BOW', badge: '🙏', shape: 'word' }];
+    var raw = clean.split(/\s+/), seq = [];
+    raw.forEach(function (tok) {
+      if (!tok || ISL_STOP[tok]) return;
+      var g = WORD_TO_GLOSS[tok];
+      if (g) {
+        var s = ISL_SIGNS[g];
+        seq.push({ gloss: g, icon: s.icon, hi: s.hi, desc: s.desc, anim: s.anim, dir: s.dir, badge: s.icon, shape: 'word' });
+      } else if (/[\u0900-\u097F]/.test(tok)) {
+        var akshars = tok.match(/(क्ष|ज्ञ|[\u0900-\u097F][\u093E-\u094D\u0902\u0903]?)/g) || [tok];
+        akshars.forEach(function (ak) {
+          var keyChar = (ak.indexOf('क्ष') === 0) ? 'क्ष' : (ak.indexOf('ज्ञ') === 0 ? 'ज्ञ' : ak.charAt(0));
+          var hexKey = keyChar.split('').map(function (c) { return 'u' + c.charCodeAt(0).toString(16).padStart(4, '0'); }).join('_');
+          var hint = HINDI_AKSHAR[keyChar] || ('Devanagari akshar "' + ak + '"');
+          seq.push({
+            gloss: ak, icon: ak, hi: 'अक्षर "' + ak + '"',
+            desc: hint, anim: 'anim-pulse', dir: 'हिन्दी', isAlpha: true, isHindi: true,
+            hindiKey: hexKey, badge: ak, shape: 'akshar'
+          });
+        });
+      } else {
+        var chars = tok.replace(/[^a-z0-9]/g, '').toUpperCase().split('');
+        chars.forEach(function (ch) {
+          var a = ISL_ALPHA[ch];
+          seq.push({
+            gloss: ch, icon: ch, hi: 'Letter ' + ch,
+            desc: a ? a[0] : ('Number "' + ch + '" — raise ' + ch + ' finger(s)'),
+            anim: 'anim-pulse', dir: 'ISL:' + ch, isAlpha: true, badge: ch,
+            shape: a ? a[3] : 'word'
+          });
+        });
+      }
+    });
+    if (!seq.length) seq.push({ gloss: 'HELLO', icon: '🙏', hi: 'नमस्ते', desc: ISL_SIGNS.HELLO.desc, anim: 'anim-nod', dir: '↕ BOW', badge: '🙏', shape: 'word' });
+    return seq.slice(0, 80);
+  }
+
+  function mountIslPlayer(host, text, autoPlay) {
+    if (!host) return;
+    if (host._islTimer) { clearInterval(host._islTimer); host._islTimer = null; }
+    host.textContent = '';
+    var seq = textToIslSequence(text);
+    var wrap = document.createElement('div'); wrap.className = 'isl-player';
+
+    var stage = document.createElement('div'); stage.className = 'isl-stage';
+    var gbox = document.createElement('div'); gbox.className = 'isl-glyph-box';
+    var svgWrap = document.createElement('div'); svgWrap.className = 'isl-emoji'; svgWrap.style.width = '100%'; svgWrap.style.height = '100%';
+    var mtag = document.createElement('span'); mtag.className = 'isl-motion-tag';
+    gbox.appendChild(svgWrap); gbox.appendChild(mtag);
+
+    var details = document.createElement('div'); details.style.minWidth = '0';
+    var title = document.createElement('div'); title.className = 'isl-word-title';
+    var cap = document.createElement('div'); cap.className = 'isl-caption';
+    details.appendChild(title); details.appendChild(cap);
+    stage.appendChild(gbox); stage.appendChild(details);
+
+    var strip = document.createElement('div'); strip.className = 'isl-seq';
+    var row = document.createElement('div');
+    row.style.display = 'flex'; row.style.gap = '.5rem'; row.style.alignItems = 'center'; row.style.flexWrap = 'wrap';
+    var replay = document.createElement('button'); replay.type = 'button'; replay.className = 'btn sm ghost'; replay.textContent = '↻ Replay Signs';
+    var attr = document.createElement('span'); attr.className = 'isl-attr'; attr.textContent = 'ISL Sign Cards · ISLVT (doi:10.17632/98mzk82wbb.1) & Hindi ISL (Krish Bhagat, Kaggle)';
+    row.appendChild(replay); row.appendChild(attr);
+
+    var timerId = null;
+    function showIndex(idx) {
+      var item = seq[idx];
+      gbox.className = 'isl-glyph-box ' + item.anim;
+      if (item.isHindi && item.hindiKey) {
+        svgWrap.innerHTML = '';
+        var himg = document.createElement('img');
+        himg.src = 'assets/isl-hi/' + item.hindiKey + '.jpg';
+        himg.alt = 'Hindi ISL sign for ' + item.gloss;
+        himg.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:10px;display:block;';
+        himg.onerror = function () { svgWrap.innerHTML = renderFlashcardSvg(item); };
+        svgWrap.appendChild(himg);
+      } else if (item.isAlpha && /^[A-Z1-9]$/.test(item.gloss)) {
+        svgWrap.innerHTML = '';
+        var img = document.createElement('img');
+        img.src = 'assets/isl/' + item.gloss + '.jpg';
+        img.alt = 'ISL sign for ' + item.gloss;
+        img.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:10px;display:block;';
+        img.onerror = function () { svgWrap.innerHTML = renderFlashcardSvg(item); };
+        svgWrap.appendChild(img);
+      } else {
+        svgWrap.innerHTML = renderFlashcardSvg(item);
+      }
+      mtag.textContent = item.dir;
+      title.textContent = item.gloss + ' · ' + item.hi;
+      cap.textContent = item.desc;
+      cardEls.forEach(function (el, i) { el.classList.toggle('active', i === idx); });
+    }
+
+    var cardEls = seq.map(function (item, idx) {
+      var b = document.createElement('button');
+      b.type = 'button'; b.className = 'isl-card-mini';
+      b.textContent = (item.isAlpha ? '' : item.icon + ' ') + item.gloss;
+      b.onclick = function () {
+        if (timerId) clearInterval(timerId);
+        showIndex(idx);
+      };
+      strip.appendChild(b);
+      return b;
+    });
+
+    wrap.appendChild(stage); wrap.appendChild(strip); wrap.appendChild(row);
+    host.appendChild(wrap);
+
+    function run() {
+      if (host._islTimer) { clearInterval(host._islTimer); host._islTimer = null; }
+      var i = 0;
+      showIndex(0);
+      if (seq.length <= 1) return;
+      host._islTimer = setInterval(function () {
+        i += 1;
+        if (i >= seq.length) { clearInterval(host._islTimer); host._islTimer = null; return; }
+        showIndex(i);
+      }, 1300);
+    }
+
+    replay.onclick = run;
+    if (autoPlay) run();
+    else showIndex(0);
+  }
+
   /* ---------------- speak composer ---------------- */
   var pending = null;
 
@@ -445,7 +787,13 @@
     setTranscript('Listening…', true);
     announce('Listening. Speak now.');
 
-    listen({ lang: prefs.lang }, function (t, fin) { setTranscript(t, true); })
+    listen({ lang: prefs.lang }, function (t) {
+      setTranscript(t, true);
+      if (t) {
+        pending = { text: t, confidence: null };
+        $('#speak-actions').classList.remove('hidden');
+      }
+    })
       .then(function (res) {
         btn.setAttribute('aria-pressed', 'false');
         var text = res.text;
@@ -726,27 +1074,72 @@
     announce('Transcript downloaded.');
   }
 
+  /* ---------------- QR Pairing & Nearby Token ---------------- */
+  function renderPairingQr(el, code) {
+    if (!el) return;
+    var size = 156, cells = 11, cell = Math.floor(size / cells), seed = 0;
+    for (var i = 0; i < code.length; i++) seed = (seed * 31 + code.charCodeAt(i)) & 0xfffffff;
+    var svg = ['<svg xmlns="http://www.w3.org/2000/svg" width="' + size + '" height="' + size + '" viewBox="0 0 ' + size + ' ' + size + '">'];
+    svg.push('<rect width="' + size + '" height="' + size + '" fill="#FFFFFF"/>');
+    for (var r = 0; r < cells; r++) {
+      for (var c = 0; c < cells; c++) {
+        var corner = (r < 3 && c < 3) || (r < 3 && c >= cells - 3) || (r >= cells - 3 && c < 3);
+        var border = corner && (r === 0 || r === 2 || r === cells - 1 || r === cells - 3 || c === 0 || c === 2 || c === cells - 1 || c === cells - 3 || (r === 1 && c === 1) || (r === 1 && c === cells - 2) || (r === cells - 2 && c === 1));
+        var bit = ((seed >> ((r * cells + c) % 24)) ^ (r * 7 + c * 13)) & 1;
+        if (border || (!corner && bit)) {
+          svg.push('<rect x="' + (c * cell) + '" y="' + (r * cell) + '" width="' + (cell - 1) + '" height="' + (cell - 1) + '" rx="2" fill="#20233B"/>');
+        }
+      }
+    }
+    svg.push('</svg>');
+    el.innerHTML = svg.join('');
+  }
+
+  var expiryTimer = null;
+  function startNearbyToken(code) {
+    if ($('#nearby-code-display')) $('#nearby-code-display').textContent = code;
+    renderPairingQr($('#nearby-qr'), code);
+    var secs = 300;
+    if (expiryTimer) clearInterval(expiryTimer);
+    expiryTimer = setInterval(function () {
+      secs = Math.max(0, secs - 1);
+      var m = String(Math.floor(secs / 60)).padStart(2, '0'), s = String(secs % 60).padStart(2, '0');
+      if ($('#nearby-expiry')) $('#nearby-expiry').textContent = secs ? ('Temporary token · Expires in ' + m + ':' + s) : 'Token expired — generate a new code';
+      if (!secs) clearInterval(expiryTimer);
+    }, 1000);
+  }
+
   /* ---------------- wiring ---------------- */
   function wire() {
-    $$('[data-go]').forEach(function (b) {
-      b.onclick = function () { show(b.getAttribute('data-go')); };
+    $$('[data-nav]').forEach(function (b) {
+      b.onclick = function (e) {
+        if (b.tagName === 'A') e.preventDefault();
+        show(b.getAttribute('data-nav'));
+      };
     });
 
-    // onboarding
-    $('#rng-font').oninput = function () {
+    // preferences & accessibility
+    if ($('#rng-font')) $('#rng-font').oninput = function () {
       prefs.fontScale = Number(this.value) / 100;
       $('#out-font').value = this.value + '%';
       document.documentElement.style.setProperty('--fs', (16 * prefs.fontScale).toFixed(2) + 'px');
     };
-    $('#rng-rate').oninput = function () {
+    if ($('#rng-rate')) $('#rng-rate').oninput = function () {
       prefs.rate = Number(this.value);
       $('#out-rate').value = Number(this.value).toFixed(1) + '\u00d7';
     };
-    $('#chk-contrast').onchange = function () {
+    if ($('#chk-contrast')) $('#chk-contrast').onchange = function () {
       document.documentElement.setAttribute('data-contrast', this.checked ? 'high' : 'normal');
       prefs.contrast = this.checked ? 'high' : 'normal';
     };
-    $('#btn-save-prefs').onclick = function () {
+    if ($('#studio-lang')) {
+      $('#studio-lang').onchange = function () {
+        prefs.lang = this.value;
+        applyPrefs();
+        announce('Language switched to ' + this.options[this.selectedIndex].text);
+      };
+    }
+    if ($('#btn-save-prefs')) $('#btn-save-prefs').onclick = function () {
       prefs.name = $('#f-name').value.trim();
       prefs.lang = $('#sel-lang').value;
       prefs.input = [];
@@ -755,6 +1148,7 @@
       if ($('#chk-type').checked) prefs.input.push('text');
       prefs.output = [];
       if ($('#chk-text').checked) prefs.output.push('text');
+      if ($('#chk-out-sign') && $('#chk-out-sign').checked) prefs.output.push('sign');
       if ($('#chk-audio').checked) prefs.output.push('audio');
       prefs.haptics = $('#chk-haptics').checked;
       prefs.fontScale = Number($('#rng-font').value) / 100;
@@ -762,102 +1156,145 @@
       if (!prefs.input.length) prefs.input = ['text'];
       if (!prefs.output.length) prefs.output = ['text'];
       applyPrefs();
-      $('#out-chip').textContent = prefs.output.join(' + ');
       show('home');
-      announce('Preferences saved. ' + (prefs.name ? 'Hello ' + prefs.name + '. ' : '') + 'Choose create or join room.');
+      announce('Preferences saved.');
     };
 
-    // home
-    $('#btn-create').onclick = function () {
+    // nearby & home
+    if ($('#btn-home-solo')) $('#btn-home-solo').onclick = function () {
+      joinRoom('SANKET-42');
+      seedDemo();
+      show('session');
+    };
+    if ($('#btn-create')) $('#btn-create').onclick = function () {
       var code = 'SANKET-' + Math.floor(10 + Math.random() * 89);
-      if (joinRoom(code)) $('#room-code').value = code;
+      startNearbyToken(code);
+      if ($('#room-code')) $('#room-code').value = code;
+      if ($('#side-status-text')) $('#side-status-text').textContent = 'Pairing: ' + code;
     };
-    $('#btn-join').onclick = function () {
-      var v = $('#room-code').value.trim();
-      if (!v) { $('#home-msg').textContent = 'Enter a room code first.'; $('#room-code').focus(); return; }
-      if (!joinRoom(v)) $('#home-msg').textContent = 'Could not join that room.';
+    if ($('#btn-enter-created')) $('#btn-enter-created').onclick = function () {
+      var code = ($('#nearby-code-display') && $('#nearby-code-display').textContent) || 'SANKET-42';
+      if (joinRoom(code)) { seedDemo(); show('session'); }
     };
-    $('#btn-solo').onclick = function () { joinRoom('SOLO-' + Math.floor(100 + Math.random() * 900)); };
+    if ($('#join-form')) $('#join-form').onsubmit = function (e) {
+      e.preventDefault();
+      var v = $('#room-code').value.trim().toUpperCase();
+      if (!v) { if ($('#join-err')) $('#join-err').textContent = 'Enter a pairing code first.'; $('#room-code').focus(); return; }
+      if ($('#join-err')) $('#join-err').textContent = '';
+      if ($('#accept-banner')) {
+        $('#accept-text').textContent = 'Ready to connect to session "' + v + '". Both participants must accept.';
+        $('#accept-banner').classList.remove('hidden');
+      } else if (joinRoom(v)) { show('session'); }
+    };
+    if ($('#btn-accept-conn')) $('#btn-accept-conn').onclick = function () {
+      var v = ($('#room-code') && $('#room-code').value.trim().toUpperCase()) || 'SANKET-42';
+      $('#accept-banner').classList.add('hidden');
+      if (joinRoom(v)) { show('session'); announce('Connected to nearby session ' + v); }
+    };
+    if ($('#btn-decline-conn')) $('#btn-decline-conn').onclick = function () {
+      $('#accept-banner').classList.add('hidden');
+      announce('Connection declined.');
+    };
+    if ($('#btn-solo')) $('#btn-solo').onclick = function () {
+      var code = 'SOLO-' + Math.floor(100 + Math.random() * 900);
+      joinRoom(code);
+      seedDemo();
+      show('session');
+    };
 
-    // session
-    $('#btn-copy').onclick = function () {
-      var t = room || '';
-      if (navigator.clipboard) navigator.clipboard.writeText(t).then(function () { announce('Room code copied.'); }, function () {});
-      else announce('Room code is ' + t);
+    // session controls
+    if ($('#btn-leave')) $('#btn-leave').onclick = function () { leaveRoom(); show('home'); };
+    if ($('#btn-export')) $('#btn-export').onclick = exportTranscript;
+    if ($('#btn-toggle-captions')) $('#btn-toggle-captions').onclick = function () {
+      prefs.captions = !prefs.captions;
+      this.textContent = prefs.captions ? 'CC Captions: On' : 'CC Captions: Off';
+      this.setAttribute('aria-pressed', prefs.captions ? 'true' : 'false');
+      if ($('#feed-card')) $('#feed-card').classList.toggle('hidden', !prefs.captions);
     };
-    $('#btn-leave').onclick = leaveRoom;
-    $('#btn-export').onclick = exportTranscript;
-    $('#btn-voicecmd').onclick = voiceCommand;
+    if ($('#btn-pause-session')) $('#btn-pause-session').onclick = function () {
+      paused = !paused;
+      this.textContent = paused ? '▶ Resume' : '⏸ Pause';
+      if ($('#conn-badge')) $('#conn-badge').textContent = paused ? '⏸ Paused' : '● Nearby Session';
+      if (paused && listening) stopListen();
+      announce(paused ? 'Session paused.' : 'Session resumed.');
+    };
 
     // tabs
-    $('#tab-speak').onclick = function () { tab('speak'); };
-    $('#tab-type').onclick = function () { tab('type'); $('#txt-input').focus(); };
-    $('#tab-sign').onclick = function () { tab('sign'); };
+    if ($('#tab-speak')) $('#tab-speak').onclick = function () { tab('speak'); };
+    if ($('#tab-type')) $('#tab-type').onclick = function () { tab('type'); if ($('#txt-input')) $('#txt-input').focus(); };
+    if ($('#tab-sign')) $('#tab-sign').onclick = function () { tab('sign'); };
 
     // speak
-    $('#btn-mic').onclick = function () {
-      if (listening) { stopListen(); return; }
-      startMic();
-    };
-    $('#btn-send-speak').onclick = function () {
-      if (!pending || !pending.text) { announce('Nothing to send yet.'); return; }
-      send({ text: pending.text, modality: 'speech', confidence: pending.confidence });
+    if ($('#btn-mic')) $('#btn-mic').onclick = function () { if (listening) { stopListen(); return; } startMic(); };
+    if ($('#btn-send-speak')) $('#btn-send-speak').onclick = function () {
+      var fallback = ($('#transcript') && $('#transcript').textContent) || '';
+      if (fallback === 'Your spoken words will appear here…' || fallback === 'Listening…') fallback = '';
+      var txt = (pending && pending.text) || fallback.trim();
+      if (!txt) { announce('Nothing to send yet.'); return; }
+      if (listening) stopListen();
+      send({ text: txt, modality: 'speech', confidence: (pending && pending.confidence) || null });
       resetSpeak();
       tab('speak');
     };
-    $('#btn-edit-speak').onclick = function () {
-      if (pending && pending.text) $('#txt-input').value = pending.text;
-      tab('type'); $('#txt-input').focus();
+    if ($('#btn-edit-speak')) $('#btn-edit-speak').onclick = function () {
+      if (pending && pending.text && $('#txt-input')) $('#txt-input').value = pending.text;
+      tab('type'); if ($('#txt-input')) $('#txt-input').focus();
     };
-    $('#btn-clear-speak').onclick = resetSpeak;
+    if ($('#btn-clear-speak')) $('#btn-clear-speak').onclick = resetSpeak;
 
     // type
-    $('#btn-send-type').onclick = function () {
+    if ($('#btn-send-type')) $('#btn-send-type').onclick = function () {
       var v = $('#txt-input').value.trim();
       if (!v) { announce('Type a message first.'); $('#txt-input').focus(); return; }
       send({ text: v, modality: 'text', confidence: null });
       $('#txt-input').value = '';
     };
-    $('#btn-speak-type').onclick = function () {
+    if ($('#btn-speak-type')) $('#btn-speak-type').onclick = function () {
       var v = $('#txt-input').value.trim();
       if (v) speak(v, prefs.lang);
     };
 
-    // sign
-    $('#btn-cam').onclick = startCamera;
-    $('#btn-cam-send').onclick = function () {
-      var lab = $('#camLabel');
-      var shape = lab.dataset.shape || '';
-      var stab = lab.dataset.stability || '';
+    // sign camera
+    if ($('#btn-cam')) $('#btn-cam').onclick = startCamera;
+    if ($('#btn-cam-send')) $('#btn-cam-send').onclick = function () {
+      var g = $('#sign-guess');
+      var shape = (g && g.dataset && g.dataset.shape) || (g && g.textContent) || '';
+      var st = $('#sign-stab');
+      var stab = (st && st.dataset && st.dataset.stability) || '80';
       if (!shape) return;
       send({
         text: (prefs.lang === 'hi-IN' ? 'हस्त मुद्रा: ' : 'Handshape: ') + shape + ' (' + stab + '%)',
-        modality: 'sign-heuristic', confidence: stab ? Number(stab) / 100 : null
+        modality: 'sign-heuristic', confidence: Number(stab) / 100
       });
     };
 
-    // lab
-    $('#lab-lang').onchange = function () { labIdx = 0; labResults = []; labRender(); };
-    $('#btn-lab-record').onclick = labRecord;
-    $('#btn-lab-next').onclick = function () { var l = $('#lab-lang').value; labIdx = (labIdx + 1) % LAB[l].length; labRender(); };
-    $('#btn-lab-reset').onclick = function () { labResults = []; labIdx = 0; $('#lab-status').textContent = ''; labRender(); };
+    // accuracy lab
+    if ($('#btn-lab-calc')) $('#btn-lab-calc').onclick = function () {
+      var ref = ($('#lab-ref') && $('#lab-ref').value) || '';
+      var hyp = ($('#lab-hyp') && $('#lab-hyp').value) || '';
+      var w = words(ref).length;
+      var d = lev(words(ref), words(hyp));
+      var wer = w ? (d / w) * 100 : 0;
+      var acc = accuracy(ref, hyp);
+      if ($('#lab-result')) {
+        $('#lab-result').textContent = 'WER: ' + wer.toFixed(1) + '% · Accuracy: ' + acc + '%';
+        $('#lab-result').className = 'chip ' + (acc >= 85 ? 'ok' : (acc >= 60 ? 'warn' : 'bad'));
+      }
+    };
 
-    // keyboard shortcut: alt+s send, alt+m mic
     document.addEventListener('keydown', function (e) {
       if (!e.altKey) return;
-      if (e.key === 'm' && room) { e.preventDefault(); $('#btn-mic').click(); }
-      if (e.key === 's' && room) { e.preventDefault(); $('#btn-send-speak').click(); }
+      if (e.key === 'm' && room && $('#btn-mic')) { e.preventDefault(); $('#btn-mic').click(); }
+      if (e.key === 's' && room && $('#btn-send-speak')) { e.preventDefault(); $('#btn-send-speak').click(); }
     });
   }
-
 
   function seedDemo() {
     if (msgs.length) return;
     var now = Date.now();
     var demo = [
       { id: 'demo1', from: 'guest-asha', name: 'Asha', lang: 'hi-IN', text: '\u0928\u092e\u0938\u094d\u0924\u0947, \u092e\u0941\u091d\u0947 \u0921\u0949\u0915\u094d\u091f\u0930 \u0915\u0947 \u092a\u093e\u0938 \u091c\u093e\u0928\u093e \u0939\u0948', modality: 'speech', confidence: 0.94, ts: now - 240000 },
-      { id: 'demo2', from: ME, name: prefs.name || 'Guest', lang: prefs.lang, text: prefs.lang === 'hi-IN' ? '\u092e\u0926\u0926' : 'Help', modality: 'sign-card', gloss: 'madad', confidence: null, ts: now - 120000 },
-      { id: 'demo3', from: 'guest-asha', name: 'Asha', lang: 'hi-IN', text: '\u0905\u0938\u094d\u092a\u0924\u093e\u0932 \u0915\u0939\u093e\u0901 \u0939\u0948', modality: 'speech', confidence: 0.61, ts: now - 60000 }
+      { id: 'demo2', from: ME, name: prefs.name || 'Guest', lang: prefs.lang, text: prefs.lang === 'hi-IN' ? '\u092e\u0926\u0926' : 'Help', modality: 'sign-card', gloss: 'madad', confidence: null, ts: now - 120000 }
     ];
     demo.forEach(function (m) { msgs.push(m); });
     store.set('room.' + room, msgs);
@@ -868,22 +1305,11 @@
     applyPrefs();
     buildGloss();
     wire();
-    $('#out-chip').textContent = prefs.output.join(' + ');
-    $('#txt-input').placeholder = prefs.lang === 'hi-IN' ? 'हिन्दी या English में लिखें…' : 'Type in English or हिन्दी…';
-
-    if (!micSupported()) {
-      banner('No speech recognition in this browser — Type mode and the accuracy lab need Chrome/Edge. Speech output still works.');
-    } else if (location.protocol === 'file:') {
-      banner('Opened as a local file: microphone access is blocked by browsers. Serve it over https or localhost to use speech input.');
-    }
-    $('#lanag-chip');
-    var hash = (location.hash || '').replace('#', '').toLowerCase();
-    if (hash === 'session') { joinRoom('SANKET-42'); seedDemo(); return; }
-    if (hash === 'lab') { show('lab'); return; }
-    if (hash === 'about') { show('about'); return; }
-    if (hash === 'home') { show('home'); return; }
-    announce('Sanket ready. Choose your communication preferences.');
-    show('onboard');
+    startNearbyToken('SANKET-42');
+    joinRoom('SANKET-42');
+    seedDemo();
+    show('home');
+    announce('Sanket ready. Choose Connect Nearby or Live Conversation.');
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);

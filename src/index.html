@@ -1,1007 +1,684 @@
 <!DOCTYPE html>
 <html data-contrast="normal" lang="en">
- <head>
+<head>
   <meta charset="utf-8"/>
   <meta content="width=device-width, initial-scale=1, viewport-fit=cover" name="viewport"/>
-  <meta content="#0b1020" name="theme-color"/>
-  <title>
-   Sanket &mdash; Different ways to communicate. One shared conversation.
-  </title>
+  <meta content="#F8F9FF" name="theme-color"/>
+  <title>Sanket — Different ways to communicate. One shared conversation.</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&family=Noto+Sans+Devanagari:wght@400;600;700&display=swap" rel="stylesheet"/>
   <style>
-   *,*::before,*::after{box-sizing:border-box}
-:root{
-  --fs:16px; --tap:3.25rem; --r:16px;
-  --bg:#0b1020; --bg2:#0f1630; --panel:#141c33; --panel2:#1b2545;
-  --line:#2b3863; --ink:#eaf0ff; --muted:#a7b3d1;
-  --brand:#6ee7ff; --brand2:#a78bfa; --ok:#3ddc97; --warn:#ffc857; --bad:#ff8fa2;
-  --shadow:0 14px 40px rgba(3,7,18,.5);
-}
-html{font-size:var(--fs);-webkit-text-size-adjust:100%}
-html[data-contrast="high"]{
-  --bg:#000; --bg2:#000; --panel:#0a0a0a; --panel2:#141414; --line:#8a8a8a;
-  --ink:#fff; --muted:#f2f2f2; --brand:#5ef2ff; --brand2:#d6c8ff; --shadow:none;
-}
-body{
-  margin:0; min-height:100vh; color:var(--ink); line-height:1.55;
-  font-family:system-ui,"Segoe UI","Noto Sans Devanagari","Noto Sans",Roboto,Arial,sans-serif;
-  background:radial-gradient(1100px 640px at 88% -12%,#1c2a5c 0%,transparent 62%),var(--bg);
-  padding-bottom:2rem;
-}
-html[data-contrast="high"] body{background:var(--bg)}
-.sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
-.skip{position:absolute;left:.5rem;top:-3rem;background:var(--brand);color:#04121c;padding:.7rem 1rem;border-radius:10px;z-index:60;font-weight:700}
-.skip:focus{top:.5rem}
-:focus-visible{outline:3px solid var(--brand);outline-offset:3px;border-radius:8px}
-.hidden{display:none !important}
-h1,h2,h3{line-height:1.25;margin:0 0 .4rem}
-h1{font-size:1.6rem} h2{font-size:1.25rem} h3{font-size:1.02rem}
-p{margin:.45rem 0}
-small,.small{font-size:.82rem}
-.muted{color:var(--muted)}
-a{color:var(--brand)}
-.wrap{max-width:62rem;margin:0 auto;padding:0 1rem}
+    :root{
+      --bg:#F8F9FF;
+      --surface:#FFFFFF;
+      --lavender:#EAE8FF;
+      --primary:#6655D9;
+      --primary-hover:#5544C8;
+      --text:#20233B;
+      --muted:#686B80;
+      --mint:#DDF5EC;
+      --mint-text:#0F6B48;
+      --blue:#E5F0FF;
+      --blue-text:#1D4ED8;
+      --amber:#FFF1D8;
+      --amber-text:#92400E;
+      --border:#E7E8F0;
+      --danger:#DC2626;
+      --danger-bg:#FEE2E2;
+      --fs:16px;
+      --radius:16px;
+    }
+    html[data-contrast="high"]{
+      --bg:#FFFFFF;
+      --surface:#FFFFFF;
+      --lavender:#E0DBFF;
+      --primary:#3B28CC;
+      --primary-hover:#2A1A9E;
+      --text:#0B0D18;
+      --muted:#2D3148;
+      --border:#1E293B;
+    }
+    *{box-sizing:border-box}
+    html{font-size:var(--fs);scroll-behavior:smooth}
+    body{
+      margin:0;background:var(--bg);color:var(--text);
+      font-family:'Inter','Noto Sans Devanagari',system-ui,-apple-system,sans-serif;
+      line-height:1.5;-webkit-font-smoothing:antialiased;overflow-x:hidden;
+    }
+    .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
+    .skip-link{
+      position:fixed;top:-60px;left:16px;z-index:200;background:var(--primary);color:#fff;
+      padding:10px 18px;border-radius:10px;font-weight:700;text-decoration:none;transition:top .15s;
+    }
+    .skip-link:focus{top:14px}
+    .hidden{display:none !important}
+    .small{font-size:.875rem}
+    .muted{color:var(--muted)}
+    .row{display:flex;align-items:center;gap:.75rem;flex-wrap:wrap}
+    .spread{justify-content:space-between}
 
-/* top bar */
-.bar{position:sticky;top:0;z-index:30;backdrop-filter:blur(12px);
-  background:color-mix(in srgb,var(--bg) 82%,transparent);border-bottom:1px solid var(--line)}
-html[data-contrast="high"] .bar{background:#000}
-.bar-in{display:flex;gap:1rem;align-items:center;justify-content:space-between;flex-wrap:wrap;padding:.6rem 1rem;max-width:62rem;margin:0 auto}
-.brand{display:flex;gap:.65rem;align-items:center;min-width:0}
-.mark{width:2.4rem;height:2.4rem;flex:0 0 auto;display:grid;place-items:center;border-radius:12px;
-  background:linear-gradient(140deg,var(--brand),var(--brand2));color:#06101f;font-weight:800;font-size:1.05rem}
-.brandtext strong{display:block;font-size:1.02rem;letter-spacing:.01em}
-.brandtext small{display:block;color:var(--muted);font-size:.74rem}
-.bar-actions{display:flex;gap:.4rem;flex-wrap:wrap}
+    /* App Shell */
+    .shell{display:grid;grid-template-columns:256px 1fr;min-height:100vh}
+    .sidebar{
+      background:var(--surface);border-right:1px solid var(--border);padding:1.25rem 1rem;
+      display:flex;flex-direction:column;gap:1.25rem;position:sticky;top:0;height:100vh;
+    }
+    .brand{display:flex;align-items:center;gap:.65rem;padding:.25rem .5rem;text-decoration:none;color:var(--text)}
+    .brand-icon{
+      width:38px;height:38px;border-radius:12px;background:var(--lavender);color:var(--primary);
+      display:grid;place-items:center;font-size:1.3rem;font-weight:800;
+    }
+    .brand-name{font-size:1.2rem;font-weight:800;letter-spacing:-.02em}
+    .nav-list{display:flex;flex-direction:column;gap:.3rem;flex:1}
+    .nav-item{
+      display:flex;align-items:center;gap:.7rem;width:100%;text-align:left;border:none;background:transparent;
+      color:var(--muted);font:inherit;font-size:.93rem;font-weight:600;padding:.7rem .85rem;border-radius:12px;
+      cursor:pointer;transition:background .15s,color .15s;min-height:44px;
+    }
+    .nav-item:hover{background:#F3F4FC;color:var(--text)}
+    .nav-item.active{background:var(--lavender);color:var(--primary);font-weight:700}
+    .nav-badge{
+      margin-left:auto;font-size:.7rem;font-weight:700;padding:.15rem .45rem;border-radius:999px;
+      background:var(--mint);color:var(--mint-text);
+    }
+    .sidebar-foot{display:flex;flex-direction:column;gap:.65rem;border-top:1px solid var(--border);padding-top:1rem}
+    .status-pill{
+      display:flex;align-items:center;gap:.5rem;padding:.55rem .75rem;border-radius:12px;
+      background:var(--mint);color:var(--mint-text);font-size:.82rem;font-weight:700;
+    }
+    .status-dot{width:8px;height:8px;border-radius:50%;background:#10B981;flex-shrink:0}
+    .guest-card{
+      display:flex;align-items:center;gap:.65rem;padding:.5rem .6rem;border-radius:12px;background:#F8F9FF;border:1px solid var(--border);
+    }
+    .avatar{
+      width:34px;height:34px;border-radius:50%;background:var(--primary);color:#fff;
+      display:grid;place-items:center;font-weight:700;font-size:.9rem;flex-shrink:0;
+    }
 
-/* buttons */
-.btn{font:inherit;font-size:.92rem;min-height:var(--tap);padding:.6rem 1rem;border-radius:12px;cursor:pointer;
-  border:1px solid var(--line);background:var(--panel2);color:var(--ink);display:inline-flex;align-items:center;
-  gap:.5rem;justify-content:center;transition:transform .12s ease,background .15s ease,border-color .15s}
-.btn:hover{border-color:var(--brand)}
-.btn:active{transform:translateY(1px)}
-.btn.primary{background:linear-gradient(135deg,var(--brand),var(--brand2));color:#06101f;border:0;font-weight:700}
-.btn.ghost{background:transparent}
-.btn.wide{width:100%}
-.btn.sm{min-height:2.5rem;font-size:.82rem;padding:.4rem .7rem}
-.btn[aria-pressed="true"]{border-color:var(--brand);background:color-mix(in srgb,var(--brand) 16%,var(--panel2))}
-.btn:disabled{opacity:.5;cursor:not-allowed}
+    /* Main Content */
+    .main{padding:1.75rem 2.25rem 5.5rem;max-width:1120px;width:100%;margin:0 auto}
+    .topbar{display:none;align-items:center;justify-content:space-between;padding:.85rem 1rem;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:50}
+    .bottom-nav{
+      display:none;position:fixed;bottom:0;left:0;right:0;z-index:60;background:var(--surface);
+      border-top:1px solid var(--border);padding:.45rem .5rem calc(.45rem + env(safe-area-inset-bottom));
+      justify-content:space-around;
+    }
+    .bnav-btn{
+      display:flex;flex-direction:column;align-items:center;gap:.2rem;border:none;background:transparent;
+      color:var(--muted);font:inherit;font-size:.72rem;font-weight:600;padding:.35rem .6rem;border-radius:10px;cursor:pointer;min-width:60px;min-height:44px;
+    }
+    .bnav-btn.active{color:var(--primary);background:var(--lavender)}
+    @media(max-width:920px){
+      .shell{grid-template-columns:1fr}
+      .sidebar{display:none}
+      .topbar{display:flex}
+      .bottom-nav{display:flex}
+      .main{padding:1.1rem 1rem 5.5rem}
+    }
 
-/* cards / layout */
-.card{background:linear-gradient(180deg,var(--panel),var(--bg2));border:1px solid var(--line);
-  border-radius:var(--r);padding:1.1rem;box-shadow:var(--shadow)}
-.card+.card{margin-top:.9rem}
-.grid{display:grid;gap:.9rem}
-@media(min-width:52rem){.grid.two{grid-template-columns:1fr 1fr}.grid.three{grid-template-columns:repeat(3,1fr)}}
-.field{display:block;margin:.6rem 0}
-.field>span.lbl{display:block;font-weight:600;margin-bottom:.3rem;font-size:.9rem}
-input[type=text],input[type=search],textarea,select{
-  font:inherit;width:100%;min-height:var(--tap);padding:.65rem .8rem;border-radius:12px;
-  border:1px solid var(--line);background:var(--bg2);color:var(--ink)}
-textarea{min-height:6rem;resize:vertical}
-input:focus,textarea:focus,select:focus{border-color:var(--brand)}
-.chk{display:flex;gap:.7rem;align-items:flex-start;padding:.7rem .8rem;border:1px solid var(--line);
-  border-radius:12px;background:var(--bg2);cursor:pointer;min-height:var(--tap)}
-.chk input{margin-top:.25rem;width:1.15rem;height:1.15rem;accent-color:#6ee7ff;flex:0 0 auto}
-.chk strong{display:block;font-size:.94rem}
-.chk em{font-style:normal;color:var(--muted);font-size:.8rem;display:block}
-.chk:has(input:checked){border-color:var(--brand);background:color-mix(in srgb,var(--brand) 12%,var(--bg2))}
-.row{display:flex;gap:.5rem;flex-wrap:wrap;align-items:center}
-.spread{justify-content:space-between}
-.chip{display:inline-flex;align-items:center;gap:.35rem;font-size:.74rem;padding:.22rem .55rem;border-radius:999px;
-  border:1px solid var(--line);background:var(--panel2);color:var(--muted);white-space:nowrap}
-.chip.ok{color:#06251a;background:var(--ok);border-color:transparent;font-weight:700}
-.chip.warn{color:#2a1f00;background:var(--warn);border-color:transparent;font-weight:700}
-.chip.bad{color:#2b0410;background:var(--bad);border-color:transparent;font-weight:700}
-.chip.sign{color:#170a2b;background:var(--brand2);border-color:transparent;font-weight:700}
-.chip.say{color:#04121c;background:var(--brand);border-color:transparent;font-weight:700}
+    /* Cards & Controls */
+    .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem}
+    .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem}
+    .grid-2{display:grid;grid-template-columns:repeat(2,1fr);gap:1rem}
+    @media(max-width:820px){.grid-3,.grid-2{grid-template-columns:1fr}}
 
-/* session */
-.session-head{display:flex;gap:.8rem;flex-wrap:wrap;align-items:center;justify-content:space-between;padding:.8rem;border-radius:14px;
-  border:1px solid var(--line);background:var(--panel);margin-bottom:.8rem}
-.roomcode{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:1.1rem;letter-spacing:.18em;font-weight:700;color:var(--brand)}
-.messages{display:flex;flex-direction:column;gap:.7rem;min-height:12rem;max-height:58vh;overflow-y:auto;padding:.2rem;scroll-behavior:smooth}
-.msg{border:1px solid var(--line);border-radius:14px;padding:.75rem .9rem;background:var(--panel);max-width:92%}
-.msg.me{margin-left:auto;background:color-mix(in srgb,var(--brand) 12%,var(--panel));border-color:color-mix(in srgb,var(--brand) 45%,var(--line))}
-.msg .meta{display:flex;gap:.4rem;flex-wrap:wrap;align-items:center;margin-bottom:.3rem;font-size:.74rem;color:var(--muted)}
-.msg .body{font-size:1.05rem;font-weight:600;word-break:break-word}
-.msg .alt{font-size:.86rem;color:var(--muted);margin-top:.25rem;font-weight:400}
-.msg .acts{display:flex;gap:.35rem;margin-top:.5rem;flex-wrap:wrap}
-.empty{color:var(--muted);text-align:center;padding:1.6rem .5rem;font-size:.9rem}
+    .hero-card{border-radius:20px;padding:1.5rem;border:1px solid var(--border);display:flex;flex-direction:column;gap:.7rem}
+    .tile-lavender{background:var(--lavender)}
+    .tile-blue{background:var(--blue)}
+    .tile-mint{background:var(--mint)}
+    .tile-amber{background:var(--amber)}
 
-/* tabs */
-.tabs{display:flex;gap:.35rem;flex-wrap:wrap;margin-bottom:.7rem}
-.tab{font:inherit;font-size:.88rem;min-height:2.8rem;padding:.5rem .85rem;border-radius:11px;cursor:pointer;
-  border:1px solid var(--line);background:transparent;color:var(--muted)}
-.tab[aria-selected="true"]{background:var(--panel2);color:var(--ink);border-color:var(--brand);font-weight:700}
+    .btn{
+      display:inline-flex;align-items:center;justify-content:center;gap:.5rem;
+      min-height:44px;padding:.6rem 1.15rem;border-radius:12px;border:1px solid var(--border);
+      background:var(--surface);color:var(--text);font:inherit;font-size:.93rem;font-weight:600;
+      cursor:pointer;transition:background .15s,border-color .15s,transform .1s;text-decoration:none;
+    }
+    .btn:hover{background:#F3F4FC;border-color:#CBD5E1}
+    .btn:focus-visible{outline:3px solid var(--primary);outline-offset:2px}
+    .btn.primary{background:var(--primary);color:#fff;border-color:var(--primary)}
+    .btn.primary:hover{background:var(--primary-hover)}
+    .btn.danger{background:var(--danger);color:#fff;border-color:var(--danger)}
+    .btn.sm{min-height:36px;padding:.35rem .75rem;font-size:.82rem;border-radius:9px}
+    .btn.ghost{background:transparent}
 
-/* mic */
-.micwrap{display:grid;place-items:center;gap:.6rem;padding:.4rem 0}
-.mic{width:6.4rem;height:6.4rem;border-radius:50%;border:0;cursor:pointer;font-size:2.1rem;color:#06101f;
-  background:linear-gradient(135deg,var(--brand),var(--brand2));box-shadow:0 0 0 6px color-mix(in srgb,var(--brand) 14%,transparent)}
-.mic[aria-pressed="true"]{animation:pulse 1.4s infinite}
-@keyframes pulse{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--brand) 45%,transparent)}
-  70%{box-shadow:0 0 0 1.5rem transparent}100%{box-shadow:0 0 0 0 transparent}}
-@media(prefers-reduced-motion:reduce){.mic[aria-pressed="true"]{animation:none}.messages{scroll-behavior:auto}}
-.transcript{min-height:3.4rem;width:100%;padding:.7rem .85rem;border-radius:12px;border:1px dashed var(--line);
-  background:var(--bg2);font-size:1.02rem}
-.transcript.live{border-style:solid;border-color:var(--brand)}
+    .chip{
+      display:inline-flex;align-items:center;gap:.35rem;padding:.25rem .65rem;border-radius:999px;
+      font-size:.76rem;font-weight:700;background:#F1F2F9;color:var(--text);border:1px solid var(--border);
+    }
+    .chip.ok{background:var(--mint);color:var(--mint-text);border-color:transparent}
+    .chip.warn{background:var(--amber);color:var(--amber-text);border-color:transparent}
+    .chip.bad{background:var(--danger-bg);color:var(--danger);border-color:transparent}
+    .chip.sign{background:var(--lavender);color:var(--primary);border-color:transparent}
+    .chip.say{background:var(--blue);color:var(--blue-text);border-color:transparent}
 
-/* gloss cards */
-.gloss{display:grid;grid-template-columns:repeat(auto-fill,minmax(8.2rem,1fr));gap:.55rem}
-.gcard{font:inherit;text-align:left;cursor:pointer;border:1px solid var(--line);border-radius:13px;padding:.6rem .7rem;
-  background:var(--bg2);color:var(--ink);min-height:4.4rem;display:flex;flex-direction:column;gap:.15rem}
-.gcard:hover,.gcard:focus-visible{border-color:var(--brand2)}
-.gcard .g-hi{font-weight:700;font-size:1rem}
-.gcard .g-en{font-size:.76rem;color:var(--muted)}
-.gcard .g-d{font-size:.68rem;color:var(--muted);opacity:.85}
+    input[type="text"],select,textarea{
+      width:100%;font:inherit;font-size:.95rem;color:var(--text);background:var(--surface);
+      border:1px solid var(--border);border-radius:12px;padding:.68rem .9rem;
+    }
+    textarea{min-height:92px;resize:vertical}
+    input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(102,85,217,.18)}
+    input[type=range]{
+      -webkit-appearance:none;appearance:none;width:100%;height:7px;background:#E2E5F1;border-radius:99px;outline:none;
+    }
+    input[type=range]::-webkit-slider-thumb{
+      -webkit-appearance:none;appearance:none;width:22px;height:22px;border-radius:50%;background:var(--primary);
+      cursor:pointer;border:2px solid #fff;box-shadow:0 2px 6px rgba(32,35,59,.25);
+    }
 
-/* camera */
-.camwrap{position:relative;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:#000;aspect-ratio:4/3}
-.camwrap video,.camwrap canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-.camwrap canvas{pointer-events:none}
+    /* Live Two-Way Split Workspace */
+    .split-stage{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem}
+    @media(max-width:820px){.split-stage{grid-template-columns:1fr}}
+    .participant-card{
+      background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:1rem;
+      display:flex;flex-direction:column;gap:.75rem;
+    }
+    .participant-card.speaking{border-color:var(--primary);box-shadow:0 0 0 2px rgba(102,85,217,.14)}
+    .tabs{display:flex;gap:.35rem;background:#F1F2F9;padding:.3rem;border-radius:12px}
+    .tab{
+      flex:1;min-height:40px;border:none;background:transparent;color:var(--muted);font:inherit;font-size:.88rem;
+      font-weight:600;border-radius:9px;cursor:pointer;
+    }
+    .tab[aria-selected="true"]{background:var(--surface);color:var(--primary);box-shadow:0 1px 4px rgba(32,35,59,.08)}
+    .transcript{
+      min-height:68px;padding:.85rem 1rem;border-radius:12px;background:#F8F9FF;border:1px solid var(--border);
+      font-size:1.05rem;font-weight:600;color:var(--text);
+    }
+    .transcript.live{border-color:var(--primary);background:var(--lavender)}
 
-/* lab table */
-table{width:100%;border-collapse:collapse;font-size:.85rem}
-th,td{text-align:left;padding:.5rem .45rem;border-bottom:1px solid var(--line);vertical-align:top}
-th{color:var(--muted);font-weight:600;font-size:.76rem;text-transform:uppercase;letter-spacing:.05em}
-.score{font-variant-numeric:tabular-nums;font-weight:700}
-.badge-acc{font-size:1.9rem;font-weight:800;color:var(--brand)}
+    /* Mic & Camera */
+    .mic-btn{
+      width:78px;height:78px;border-radius:50%;border:none;background:var(--primary);color:#fff;
+      font-size:1.9rem;cursor:pointer;display:grid;place-items:center;margin:0 auto;
+      box-shadow:0 6px 20px rgba(102,85,217,.3);transition:transform .15s,background .15s;
+    }
+    .mic-btn:hover{transform:scale(1.04);background:var(--primary-hover)}
+    .mic-btn.on{background:var(--danger);box-shadow:0 0 0 8px rgba(220,38,38,.16)}
 
-/* banner */
-.banner{padding:.65rem 1rem;text-align:center;font-size:.85rem;background:#3a2a00;color:#ffe9b0;border-bottom:1px solid #6b5200}
-html[data-contrast="high"] .banner{background:#000;color:#fff;border-bottom:2px solid #fff}
-ul.tight{margin:.4rem 0 .4rem 1.1rem;padding:0}
-ul.tight li{margin:.25rem 0}
-.kv{display:grid;grid-template-columns:auto 1fr;gap:.3rem .8rem;font-size:.86rem}
-.kv dt{color:var(--muted)}
-.kv dd{margin:0}
+    .gloss{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:.6rem;margin-top:.75rem}
+    .gcard{
+      text-align:left;padding:.7rem .8rem;border-radius:12px;border:1px solid var(--border);background:var(--surface);
+      cursor:pointer;display:flex;flex-direction:column;gap:.18rem;transition:border-color .15s,background .15s;
+    }
+    .gcard:hover{border-color:var(--primary);background:var(--lavender)}
+    .g-hi{font-weight:700;font-size:.98rem;color:var(--text)}
+    .g-en{font-size:.82rem;font-weight:600;color:var(--primary)}
+    .g-d{font-size:.73rem;color:var(--muted)}
+
+    .camwrap{position:relative;border-radius:14px;overflow:hidden;background:#0F172A;aspect-ratio:16/10;margin-top:.75rem}
+    .camwrap video,.camwrap canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}
+
+    /* Messages & ISL Visual Sign Card Stage */
+    .messages{display:flex;flex-direction:column;gap:.85rem;max-height:46vh;overflow-y:auto;padding:.25rem}
+    .msg{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:.95rem 1.15rem;max-width:90%}
+    .msg.me{margin-left:auto;background:#F4F2FF;border-color:#D8D2FA}
+    .msg .meta{display:flex;gap:.45rem;flex-wrap:wrap;align-items:center;font-size:.76rem;color:var(--muted);margin-bottom:.4rem}
+    .msg .body{font-size:1.08rem;font-weight:600;color:var(--text)}
+    .msg .alt{font-size:.9rem;color:var(--muted);margin-top:.35rem}
+    .msg .acts{display:flex;gap:.45rem;margin-top:.65rem;flex-wrap:wrap}
+
+    .isl-player{
+      margin-top:.75rem;padding:.85rem;border-radius:14px;background:#F8F9FF;border:1px solid #D8D2FA;
+      display:flex;flex-direction:column;gap:.65rem;
+    }
+    .isl-stage{
+      display:flex;align-items:center;gap:.85rem;padding:.75rem;border-radius:12px;
+      background:var(--surface);border:1px solid var(--border);
+    }
+    .isl-glyph-box{
+      width:76px;height:76px;border-radius:14px;flex-shrink:0;display:grid;place-items:center;position:relative;
+      background:var(--lavender);border:1px solid #D8D2FA;padding:4px;
+    }
+    .isl-glyph-box svg{width:100%;height:100%;display:block}
+    .isl-motion-tag{
+      position:absolute;bottom:-6px;right:-6px;font-family:'JetBrains Mono',monospace;font-size:.64rem;font-weight:700;
+      padding:.14rem .42rem;border-radius:999px;background:var(--primary);color:#fff;
+    }
+    .isl-glyph-box.anim-lift .isl-emoji{animation:islLift 1.1s ease-in-out infinite}
+    .isl-glyph-box.anim-shake .isl-emoji{animation:islShake .9s ease-in-out infinite}
+    .isl-glyph-box.anim-circle .isl-emoji{animation:islCircle 1.2s linear infinite}
+    .isl-glyph-box.anim-out .isl-emoji{animation:islOut 1.1s ease-in-out infinite}
+    .isl-glyph-box.anim-in .isl-emoji{animation:islIn 1.1s ease-in-out infinite}
+    .isl-glyph-box.anim-nod .isl-emoji{animation:islNod 1s ease-in-out infinite}
+    .isl-glyph-box.anim-pulse .isl-emoji{animation:islPulse 1.1s ease-in-out infinite}
+    @keyframes islLift{0%,100%{transform:translateY(3px)}50%{transform:translateY(-7px)}}
+    @keyframes islShake{0%,100%{transform:translateX(-5px) rotate(-5deg)}50%{transform:translateX(5px) rotate(5deg)}}
+    @keyframes islCircle{0%{transform:rotate(0deg) translateX(4px) rotate(0deg)}100%{transform:rotate(360deg) translateX(4px) rotate(-360deg)}}
+    @keyframes islOut{0%,100%{transform:scale(.94) translateX(-3px)}50%{transform:scale(1.08) translateX(5px)}}
+    @keyframes islIn{0%,100%{transform:scale(1.06) translateX(5px)}50%{transform:scale(.94) translateX(-5px)}}
+    @keyframes islNod{0%,100%{transform:translateY(-3px)}50%{transform:translateY(5px)}}
+    @keyframes islPulse{0%,100%{transform:scale(.95)}50%{transform:scale(1.08)}}
+    @media(prefers-reduced-motion:reduce){.isl-emoji{animation:none !important}}
+    .isl-word-title{font-size:1rem;font-weight:800;color:var(--text)}
+    .isl-caption{font-size:.84rem;color:var(--muted);margin-top:.15rem}
+    .isl-seq{display:flex;flex-wrap:wrap;gap:.4rem}
+    .isl-card-mini{
+      display:inline-flex;align-items:center;gap:.3rem;font-family:'JetBrains Mono',monospace;font-size:.72rem;font-weight:700;
+      padding:.3rem .55rem;border-radius:9px;background:var(--surface);color:var(--muted);border:1px solid var(--border);cursor:pointer;
+    }
+    .isl-card-mini.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+    .isl-attr{font-size:.72rem;color:var(--muted)}
+
+    /* Preference Checkboxes */
+    .pref-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:.75rem}
+    .chk{
+      display:flex;align-items:flex-start;gap:.65rem;padding:.85rem;border-radius:14px;border:1px solid var(--border);
+      background:var(--surface);cursor:pointer;
+    }
+    .chk input{width:20px;height:20px;accent-color:var(--primary);margin-top:2px;flex-shrink:0}
+    .chk strong{display:block;font-size:.92rem}
+    .chk em{display:block;font-style:normal;font-size:.8rem;color:var(--muted)}
+
+    /* QR Box */
+    .qr-box{
+      width:184px;height:184px;padding:12px;border-radius:16px;background:#fff;border:1px solid var(--border);
+      display:grid;place-items:center;margin:0 auto;
+    }
+    .roomcode{
+      font-family:'JetBrains Mono',monospace;font-size:1.35rem;font-weight:700;letter-spacing:.18em;
+      color:var(--primary);background:var(--lavender);padding:.35rem .9rem;border-radius:10px;
+    }
+    .empty{color:var(--muted);text-align:center;padding:2rem 1rem}
   </style>
- </head>
- <body>
-  <a class="skip" href="#main">
-   Skip to main content
-  </a>
-  <header class="bar">
-   <div class="bar-in">
-    <div class="brand">
-     <span aria-hidden="true" class="mark">
-      सां
-     </span>
-     <span class="brandtext">
-      <strong>
-       Sanket
-      </strong>
-      <small>
-       Different ways to communicate. One shared conversation.
-      </small>
-     </span>
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+  <div aria-live="polite" class="sr" id="sr-live"></div>
+
+  <!-- Mobile Topbar -->
+  <header class="topbar">
+    <div class="row" style="gap:.5rem">
+      <div class="brand-icon" style="width:32px;height:32px;font-size:1rem">🤟</div>
+      <strong style="font-size:1.1rem">Sanket</strong>
     </div>
-    <nav aria-label="Sections" class="bar-actions">
-     <button class="btn ghost sm" data-go="onboard" type="button">
-      Preferences
-     </button>
-     <button class="btn ghost sm" data-go="lab" type="button">
-      Accuracy lab
-     </button>
-     <button class="btn ghost sm" data-go="about" type="button">
-      How it works
-     </button>
-    </nav>
-   </div>
+    <div class="row" style="gap:.5rem">
+      <span class="chip ok" id="mob-status">● Ready</span>
+      <button class="btn sm" data-nav="prefs" type="button">Preferences</button>
+    </div>
   </header>
-  <div class="banner hidden" id="banner" role="status">
+
+  <div class="shell">
+    <!-- Desktop Sidebar -->
+    <aside aria-label="Primary navigation" class="sidebar">
+      <a class="brand" href="#home" data-nav="home">
+        <div class="brand-icon" aria-hidden="true">🤟</div>
+        <div>
+          <div class="brand-name">Sanket</div>
+          <div style="font-size:.72rem;color:var(--muted)">One shared conversation</div>
+        </div>
+      </a>
+
+      <nav class="nav-list">
+        <button class="nav-item active" data-nav="home" type="button">🏠 Home</button>
+        <button class="nav-item" data-nav="nearby" type="button">📲 Connect Nearby <span class="nav-badge">MVP</span></button>
+        <button class="nav-item" data-nav="session" type="button">💬 Live Conversation</button>
+        <button class="nav-item" data-nav="calls" type="button">📹 Sanket Calls <span class="chip" style="margin-left:auto;font-size:.66rem">Soon</span></button>
+        <button class="nav-item" data-nav="prefs" type="button">🎛️ Preferences &amp; Access</button>
+      </nav>
+
+      <div class="sidebar-foot">
+        <div class="status-pill" id="side-status">
+          <span class="status-dot"></span>
+          <span id="side-status-text">Ready to Connect</span>
+        </div>
+        <div class="guest-card">
+          <div class="avatar" id="guest-avatar">G</div>
+          <div style="min-width:0">
+            <div style="font-weight:700;font-size:.86rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="guest-name">Guest User</div>
+            <div style="font-size:.73rem;color:var(--muted)" id="guest-prefs-summary">Speech + ISL · Hindi</div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Workspace -->
+    <main class="main" id="main-content" tabindex="-1">
+
+      <!-- VIEW 1: HOME -->
+      <section class="view" id="view-home" aria-labelledby="h-home">
+        <div class="row spread" style="margin-bottom:1.25rem">
+          <div>
+            <h1 id="h-home" style="margin:0;font-size:1.75rem;letter-spacing:-.02em">Welcome to Sanket 👋</h1>
+            <p class="muted" style="margin:.25rem 0 0">Two devices. Different communication preferences. One shared real-time conversation.</p>
+          </div>
+          <div class="row">
+            <span class="chip" id="home-lang-chip">🇮🇳 हिन्दी</span>
+            <button class="btn sm" data-nav="prefs" type="button">⚙️ Edit Preferences</button>
+          </div>
+        </div>
+
+        <div class="grid-3" style="margin-bottom:1.25rem">
+          <div class="hero-card tile-lavender">
+            <div style="font-size:1.6rem">📲</div>
+            <h2 style="margin:0;font-size:1.15rem">Connect Nearby</h2>
+            <p class="small muted" style="margin:0;flex:1">Pair with someone next to you using a QR code or temporary 6-character pairing code.</p>
+            <button class="btn primary" data-nav="nearby" type="button">Start Nearby Pairing &rarr;</button>
+          </div>
+
+          <div class="hero-card tile-blue">
+            <div style="font-size:1.6rem">💬</div>
+            <h2 style="margin:0;font-size:1.15rem">Live Conversation</h2>
+            <p class="small muted" style="margin:0;flex:1">Open the two-way Speech ⇄ ISL workspace immediately, or launch a solo sandbox demo.</p>
+            <div class="row">
+              <button class="btn primary" id="btn-home-solo" type="button">Launch Demo Studio</button>
+            </div>
+          </div>
+
+          <div class="hero-card tile-mint">
+            <div style="font-size:1.6rem">📹</div>
+            <h2 style="margin:0;font-size:1.15rem">Sanket Calls <span class="chip" style="font-size:.7rem">Roadmap</span></h2>
+            <p class="small muted" style="margin:0;flex:1">Remote audio/video calling powered by the same Speech ⇄ ISL translation engine.</p>
+            <button class="btn" data-nav="calls" type="button">Preview Roadmap</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="row spread" style="margin-bottom:.75rem">
+            <h3 style="margin:0;font-size:1.05rem">How Two-Way Communication Works</h3>
+            <span class="chip ok">Zero API keys required to start</span>
+          </div>
+          <div class="grid-3">
+            <div>
+              <span class="chip say">1 · Pair Nearby</span>
+              <p class="small muted" style="margin:.45rem 0 0">One person creates a temporary QR/code session; the partner accepts. No phone number required.</p>
+            </div>
+            <div>
+              <span class="chip sign">2 · Choose Your Modality</span>
+              <p class="small muted" style="margin:.45rem 0 0">Speak in 8 Indian languages, tap/sign ISL glosses, or type. Each person uses their own preferred format.</p>
+            </div>
+            <div>
+              <span class="chip ok">3 · Adaptive Delivery</span>
+              <p class="small muted" style="margin:.45rem 0 0">Speech converts to captions + animated ISL cards; ISL signs convert to translated text + spoken audio.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- VIEW 2: CONNECT NEARBY -->
+      <section class="view hidden" id="view-nearby" aria-labelledby="h-nearby">
+        <div class="row spread" style="margin-bottom:1.25rem">
+          <div>
+            <h1 id="h-nearby" style="margin:0;font-size:1.6rem">Connect Nearby</h1>
+            <p class="muted" style="margin:.25rem 0 0">Pair two devices face-to-face using a temporary QR code or pairing code.</p>
+          </div>
+          <button class="btn sm" data-nav="home" type="button">&larr; Back</button>
+        </div>
+
+        <div class="grid-2">
+          <div class="card" style="text-align:center">
+            <h2 style="margin:0 0 .35rem;font-size:1.15rem">Share Pairing QR &amp; Code</h2>
+            <p class="small muted" style="margin:0 0 1rem">Ask the other person to scan this QR or enter the code below.</p>
+            <div class="qr-box" id="nearby-qr" aria-label="Pairing QR code"></div>
+            <div style="margin:1rem 0 .5rem">
+              <span class="roomcode" id="nearby-code-display">SANKET-42</span>
+            </div>
+            <p class="small muted" id="nearby-expiry" style="margin:0 0 1rem">Temporary token · Expires in 05:00</p>
+            <div class="row" style="justify-content:center">
+              <button class="btn primary" id="btn-create" type="button">Generate New Code</button>
+              <button class="btn" id="btn-enter-created" type="button">Open Room &rarr;</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <h2 style="margin:0 0 .35rem;font-size:1.15rem">Join Partner's Session</h2>
+            <p class="small muted" style="margin:0 0 1rem">Enter the pairing code shared by the other participant.</p>
+            <form id="join-form" style="display:flex;flex-direction:column;gap:.85rem">
+              <label for="room-code" class="small" style="font-weight:700">Pairing Code
+                <input id="room-code" type="text" maxlength="20" autocapitalize="characters" autocomplete="off" placeholder="e.g. SANKET-42" style="margin-top:.35rem;font-family:'JetBrains Mono',monospace;letter-spacing:.14em"/>
+              </label>
+              <div class="row">
+                <button class="btn primary" type="submit">Request Connection &rarr;</button>
+                <button class="btn" id="btn-solo" type="button">🚀 Solo Sandbox</button>
+              </div>
+              <p class="small muted" id="join-err" role="status" style="color:var(--danger);margin:0"></p>
+            </form>
+
+            <div class="card tile-amber hidden" id="accept-banner" style="margin-top:1rem">
+              <strong style="display:block">Partner Connection Request</strong>
+              <p class="small" id="accept-text" style="margin:.25rem 0 .65rem">A nearby participant is ready to join.</p>
+              <div class="row">
+                <button class="btn primary sm" id="btn-accept-conn" type="button">✓ Accept Connection</button>
+                <button class="btn sm" id="btn-decline-conn" type="button">✕ Decline</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- VIEW 3: LIVE CONVERSATION (TWO-WAY WORKSPACE) -->
+      <section class="view hidden" id="view-session" aria-labelledby="h-session">
+        <div class="card" style="margin-bottom:1rem;padding:.9rem 1.15rem">
+          <div class="row spread">
+            <div class="row">
+              <span class="chip ok" id="conn-badge">● Nearby Session</span>
+              <span class="roomcode" id="room-badge" style="font-size:1rem;padding:.2rem .65rem">—</span>
+              <span class="small muted" id="peer-count">1 participant</span>
+            </div>
+            <div class="row">
+              <button class="btn sm" id="btn-toggle-captions" type="button" aria-pressed="true">CC Captions: On</button>
+              <button class="btn sm" id="btn-pause-session" type="button">⏸ Pause</button>
+              <button class="btn sm" id="btn-export" type="button">⬇ Export .txt</button>
+              <button class="btn sm danger" id="btn-leave" type="button">End Session</button>
+            </div>
+          </div>
+          <ul class="row" id="peers" style="list-style:none;padding:0;margin:.6rem 0 0"></ul>
+        </div>
+
+        <!-- Split Two-Way Stage -->
+        <div class="split-stage">
+          <!-- Left: You (Input Composer) -->
+          <div class="participant-card speaking" id="card-you">
+            <div class="row spread">
+              <div class="row">
+                <span class="chip say">You</span>
+                <strong id="you-label">Input Workspace</strong>
+              </div>
+              <select id="studio-lang" aria-label="Switch active language" style="width:auto;min-height:34px;padding:.25rem .6rem;font-size:.82rem">
+                <option value="hi-IN">🇮🇳 हिन्दी (Hindi)</option>
+                <option value="en-IN">🇮🇳 English (India)</option>
+              </select>
+            </div>
+
+            <div class="tabs" role="tablist" aria-label="Communication input mode">
+              <button class="tab" id="tab-speak" role="tab" aria-selected="true" aria-controls="pane-speak" type="button">🎙️ Speak</button>
+              <button class="tab" id="tab-sign" role="tab" aria-selected="false" aria-controls="pane-sign" tabindex="-1" type="button">🤟 Sign (ISL)</button>
+              <button class="tab" id="tab-type" role="tab" aria-selected="false" aria-controls="pane-type" tabindex="-1" type="button">⌨️ Type</button>
+            </div>
+
+            <!-- Speak Pane -->
+            <div id="pane-speak" role="tabpanel" aria-labelledby="tab-speak">
+              <div style="text-align:center;padding:.5rem 0">
+                <button class="mic-btn" id="btn-mic" type="button" aria-pressed="false" aria-label="Start or stop microphone">🎙️</button>
+                <p class="small muted" id="mic-hint" style="margin:.55rem 0 0">Tap to speak in your selected language.</p>
+              </div>
+              <div class="transcript" id="transcript" aria-live="polite">Your spoken words will appear here…</div>
+              <div class="row" style="margin-top:.6rem">
+                <span class="chip hidden" id="conf-chip"></span>
+                <span class="chip" id="lang-chip">हिन्दी</span>
+              </div>
+              <div class="row hidden" id="speak-actions" style="margin-top:.75rem">
+                <button class="btn primary sm" id="btn-send-speak" type="button">✓ Send</button>
+                <button class="btn sm" id="btn-edit-speak" type="button">✏️ Edit</button>
+                <button class="btn sm ghost" id="btn-clear-speak" type="button">✕ Discard</button>
+              </div>
+              <p class="small hidden" id="confirm-note" role="status" style="color:var(--amber-text);margin:.5rem 0 0"></p>
+            </div>
+
+            <!-- Sign Pane -->
+            <div class="hidden" id="pane-sign" role="tabpanel" aria-labelledby="tab-sign">
+              <p class="small muted" style="margin:0">Validated ISL Vocabulary (12 core glosses). Tap to send as speech/text:</p>
+              <div class="gloss" id="glossGrid"></div>
+              <div style="margin-top:1rem;padding-top:.85rem;border-top:1px solid var(--border)">
+                <div class="row spread">
+                  <strong class="small">Handshape Camera (Experimental)</strong>
+                  <span class="chip warn">Limited vocabulary</span>
+                </div>
+                <div class="row" style="margin-top:.55rem">
+                  <button class="btn sm primary" id="btn-cam" type="button">📷 Start Camera</button>
+                  <button class="btn sm hidden" id="btn-cam-send" type="button">Send Detected Sign</button>
+                </div>
+                <p class="small muted" id="cam-status" role="status" style="margin:.45rem 0 0">Camera inactive. Permission requested only on start.</p>
+                <div class="camwrap hidden" id="cam-wrap">
+                  <video id="cam-video" autoplay muted playsinline></video>
+                  <canvas id="cam-canvas"></canvas>
+                </div>
+                <div class="row" style="margin-top:.45rem">
+                  <span class="chip hidden" id="sign-guess"></span>
+                  <span class="chip hidden" id="sign-stab"></span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Type Pane -->
+            <div class="hidden" id="pane-type" role="tabpanel" aria-labelledby="tab-type">
+              <label for="txt-input" class="sr">Type your message</label>
+              <textarea id="txt-input" placeholder="Type message in any supported language…"></textarea>
+              <div class="row" style="margin-top:.65rem">
+                <button class="btn primary" id="btn-send-type" type="button">Send Message &rarr;</button>
+                <button class="btn" id="btn-speak-type" type="button">🔊 Preview Aloud</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right: Partner Output & Live ISL Visualiser -->
+          <div class="participant-card" id="card-partner">
+            <div class="row spread">
+              <div class="row">
+                <span class="chip sign">Partner View</span>
+                <strong>Adaptive Output &amp; ISL Visualiser</strong>
+              </div>
+              <span class="chip" id="out-chip">text</span>
+            </div>
+            <div id="partner-isl-spotlight">
+              <div class="card" style="background:#F8F9FF;text-align:center;padding:1.5rem">
+                <div style="font-size:1.8rem">🤟</div>
+                <p class="small muted" style="margin:.35rem 0 0">Incoming messages appear here as animated ISL sign cards, captions, and/or spoken audio based on recipient preference.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Conversation Feed -->
+        <div class="card" id="feed-card">
+          <div class="row spread" style="margin-bottom:.65rem">
+            <h3 style="margin:0;font-size:1rem">Shared Conversation Transcript</h3>
+            <span class="small muted">Click "🤟 Play ISL" or "🔊 Speak" on any message</span>
+          </div>
+          <div class="messages" id="messages" aria-live="polite" aria-label="Conversation messages">
+            <p class="empty">No messages yet. Speak, sign, or type to start.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- VIEW 4: SANKET CALLS (FUTURE ROADMAP) -->
+      <section class="view hidden" id="view-calls" aria-labelledby="h-calls">
+        <div class="row spread" style="margin-bottom:1.25rem">
+          <div>
+            <h1 id="h-calls" style="margin:0;font-size:1.6rem">Sanket Calls <span class="chip warn">Future Phase</span></h1>
+            <p class="muted" style="margin:.25rem 0 0">Remote audio/video calling using the same Speech ⇄ ISL engine (Priority 2 after Nearby MVP).</p>
+          </div>
+          <button class="btn sm" data-nav="home" type="button">&larr; Back</button>
+        </div>
+        <div class="card tile-blue">
+          <h2 style="margin:0 0 .5rem">Planned Architecture</h2>
+          <p class="small muted" style="margin:0 0 1rem">Sanket Calls will reuse the WebRTC media &amp; translation pipeline built for Sanket Nearby, adding STUN/TURN traversal and optional account contacts. For now, use <strong>Connect Nearby</strong> for face-to-face two-device communication.</p>
+          <button class="btn primary" data-nav="nearby" type="button">Go to Connect Nearby &rarr;</button>
+        </div>
+      </section>
+
+      <!-- VIEW 5: PREFERENCES & ACCESSIBILITY -->
+      <section class="view hidden" id="view-prefs" aria-labelledby="h-prefs">
+        <div class="row spread" style="margin-bottom:1.25rem">
+          <div>
+            <h1 id="h-prefs" style="margin:0;font-size:1.6rem">Communication Preferences &amp; Accessibility</h1>
+            <p class="muted" style="margin:.25rem 0 0">Choose how you prefer to send and receive messages. You can change these anytime.</p>
+          </div>
+          <button class="btn sm" data-nav="home" type="button">&larr; Back</button>
+        </div>
+
+        <form id="prefs-form" class="card" style="display:flex;flex-direction:column;gap:1.25rem">
+          <div class="grid-2">
+            <label class="small" style="font-weight:700" for="f-name">Display Name (Optional)
+              <input id="f-name" type="text" maxlength="40" placeholder="Guest" style="margin-top:.35rem"/>
+            </label>
+            <label class="small" style="font-weight:700" for="sel-lang">Preferred Language
+              <select id="sel-lang" style="margin-top:.35rem">
+                <option value="hi-IN">🇮🇳 हिन्दी (Hindi)</option>
+                <option value="en-IN">🇮🇳 English (India)</option>
+              </select>
+            </label>
+          </div>
+
+          <div>
+            <strong class="small">1. How do you prefer to send messages?</strong>
+            <div class="pref-grid" style="margin-top:.55rem">
+              <label class="chk"><input id="chk-speak" type="checkbox" checked/><div><strong>Speak (Voice)</strong><em>Voice input &amp; commands</em></div></label>
+              <label class="chk"><input id="chk-sign" type="checkbox"/><div><strong>Indian Sign Language</strong><em>ISL glosses &amp; hand camera</em></div></label>
+              <label class="chk"><input id="chk-type" type="checkbox" checked/><div><strong>Type / Switch</strong><em>Keyboard or assistive input</em></div></label>
+            </div>
+          </div>
+
+          <div>
+            <strong class="small">2. How do you prefer to receive messages?</strong>
+            <div class="pref-grid" style="margin-top:.55rem">
+              <label class="chk"><input id="chk-text" type="checkbox" checked/><div><strong>Text &amp; Captions</strong><em>Readable, screen-reader ready</em></div></label>
+              <label class="chk"><input id="chk-out-sign" type="checkbox" checked/><div><strong>ISL Visualisation</strong><em>Animated sign card sequence</em></div></label>
+              <label class="chk"><input id="chk-audio" type="checkbox"/><div><strong>Spoken Audio (TTS)</strong><em>Read incoming messages aloud</em></div></label>
+              <label class="chk"><input id="chk-haptics" type="checkbox"/><div><strong>Haptic Alerts</strong><em>Vibration on new message</em></div></label>
+            </div>
+          </div>
+
+          <div class="grid-3">
+            <label class="small" style="font-weight:700" for="rng-font">Text Size (<output id="out-font">100%</output>)
+              <input id="rng-font" type="range" min="90" max="140" step="5" value="100" style="margin-top:.5rem"/>
+            </label>
+            <label class="small" style="font-weight:700" for="rng-rate">Speech Rate (<output id="out-rate">1.0×</output>)
+              <input id="rng-rate" type="range" min="0.6" max="1.6" step="0.1" value="1.0" style="margin-top:.5rem"/>
+            </label>
+            <label class="chk"><input id="chk-contrast" type="checkbox"/><div><strong>High-Contrast Mode</strong><em>WCAG AAA contrast boost</em></div></label>
+          </div>
+
+          <div class="row">
+            <button class="btn primary" id="btn-save-prefs" type="button">Save Preferences &rarr;</button>
+          </div>
+        </form>
+      </section>
+
+      <!-- VIEW 6: ACCURACY LAB -->
+      <section class="view hidden" id="view-lab" aria-labelledby="h-lab">
+        <div class="row spread" style="margin-bottom:1.25rem">
+          <div>
+            <h1 id="h-lab" style="margin:0;font-size:1.6rem">Empirical Accuracy Lab</h1>
+            <p class="muted" style="margin:.25rem 0 0">Measure speech recognition Word Error Rate (WER) against reference sentences.</p>
+          </div>
+          <button class="btn sm" data-nav="home" type="button">&larr; Back</button>
+        </div>
+        <div class="card" style="display:flex;flex-direction:column;gap:1rem">
+          <label class="small" style="font-weight:700" for="lab-ref">Reference Sentence
+            <input id="lab-ref" type="text" value="नमस्ते मुझे मदद चाहिए" style="margin-top:.35rem"/>
+          </label>
+          <label class="small" style="font-weight:700" for="lab-hyp">Recognized Hypothesis
+            <input id="lab-hyp" type="text" value="नमस्ते मुझे मदद चाहिए" style="margin-top:.35rem"/>
+          </label>
+          <div class="row">
+            <button class="btn primary" id="btn-lab-calc" type="button">Calculate WER</button>
+            <span class="chip ok" id="lab-result">WER: 0.0% · Exact match</span>
+          </div>
+        </div>
+      </section>
+
+    </main>
   </div>
-  <main class="wrap" id="main" style="padding-top:1rem">
-   <!-- ===================== ONBOARDING ===================== -->
-   <section aria-labelledby="h-onboard" class="screen" id="screen-onboard">
-    <h1 id="h-onboard" tabindex="-1">
-     How do you want to communicate?
-    </h1>
-    <p class="muted">
-     Answer only what matters to you. Nothing here locks you into a category &mdash; you can combine any options, and change them any time.
-    </p>
-    <div class="grid two" style="margin-top:.9rem">
-     <div class="card">
-      <h2>
-       1 &middot; You
-      </h2>
-      <label class="field" for="f-name">
-       <span class="lbl">
-        Name or nickname (optional)
-       </span>
-       <input autocomplete="nickname" id="f-name" placeholder="e.g. Aarav" type="text"/>
-      </label>
-      <fieldset style="border:0;padding:0;margin:1rem 0 0">
-       <legend class="lbl" style="font-weight:600;font-size:.9rem;margin-bottom:.35rem">
-        How you send messages
-       </legend>
-       <div class="grid" style="gap:.5rem">
-        <label class="chk">
-         <input checked="" id="chk-speak" type="checkbox"/>
-         <span>
-          <strong>
-           Speak
-          </strong>
-          <em>
-           Voice input, transcribed with confidence checking
-          </em>
-         </span>
-        </label>
-        <label class="chk">
-         <input id="chk-sign" type="checkbox"/>
-         <span>
-          <strong>
-           Sign (ISL)
-          </strong>
-          <em>
-           Validated gloss cards + experimental handshape camera
-          </em>
-         </span>
-        </label>
-        <label class="chk">
-         <input checked="" id="chk-type" type="checkbox"/>
-         <span>
-          <strong>
-           Type
-          </strong>
-          <em>
-           Keyboard or assistive switch input
-          </em>
-         </span>
-        </label>
-       </div>
-      </fieldset>
-      <fieldset style="border:0;padding:0;margin:1rem 0 0">
-       <legend class="lbl" style="font-weight:600;font-size:.9rem;margin-bottom:.35rem">
-        How you receive messages
-       </legend>
-       <div class="grid" style="gap:.5rem">
-        <label class="chk">
-         <input checked="" id="chk-text" type="checkbox"/>
-         <span>
-          <strong>
-           Read text
-          </strong>
-          <em>
-           Large text, screen-reader friendly
-          </em>
-         </span>
-        </label>
-        <label class="chk">
-         <input checked="" id="chk-audio" type="checkbox"/>
-         <span>
-          <strong>
-           Hear audio
-          </strong>
-          <em>
-           Every incoming message is spoken aloud
-          </em>
-         </span>
-        </label>
-       </div>
-      </fieldset>
-     </div>
-     <div class="card">
-      <h2>
-       2 &middot; Language &amp; comfort
-      </h2>
-      <label class="field" for="sel-lang">
-       <span class="lbl">
-        Spoken language
-       </span>
-       <select id="sel-lang">
-        <option value="hi-IN">
-         हिन्दी (Hindi, India)
-        </option>
-        <option value="en-IN">
-         English (India)
-        </option>
-       </select>
-      </label>
-      <p class="small muted" style="margin-top:-.2rem">
-       Sign language: Indian Sign Language (ISL) &mdash; constrained, validated vocabulary.
-      </p>
-      <label class="field" for="rng-font">
-       <span class="lbl">
-        Text size &mdash;
-        <output id="out-font">
-         100%
-        </output>
-       </span>
-       <input id="rng-font" max="175" min="100" step="5" style="width:100%;min-height:2.6rem" type="range" value="100"/>
-      </label>
-      <label class="field" for="rng-rate">
-       <span class="lbl">
-        Speech speed &mdash;
-        <output id="out-rate">
-         1.0&times;
-        </output>
-       </span>
-       <input id="rng-rate" max="1.4" min="0.6" step="0.1" style="width:100%;min-height:2.6rem" type="range" value="1"/>
-      </label>
-      <div class="grid" style="gap:.5rem">
-       <label class="chk">
-        <input id="chk-contrast" type="checkbox"/>
-        <span>
-         <strong>
-          High contrast
-         </strong>
-         <em>
-          Stronger borders and pure black background
-         </em>
-        </span>
-       </label>
-       <label class="chk">
-        <input checked="" id="chk-haptics" type="checkbox"/>
-        <span>
-         <strong>
-          Haptic alerts
-         </strong>
-         <em>
-          Vibrate when a message arrives
-         </em>
-        </span>
-       </label>
-      </div>
-     </div>
-    </div>
-    <div class="card" style="margin-top:.9rem">
-     <div class="row spread">
-      <div>
-       <h2 style="margin:0">
-        Live preview
-       </h2>
-       <p class="small muted" style="margin:.2rem 0 0">
-        This is how your conversation will look.
-       </p>
-      </div>
-      <button class="btn primary" id="btn-save-prefs" type="button">
-       Save &amp; continue &rarr;
-      </button>
-     </div>
-     <div class="msg" id="preview-card" style="max-width:100%;margin-top:.7rem">
-      <div class="meta">
-       <span class="chip say">
-        speech
-       </span>
-       <span class="chip ok">
-        0.94
-       </span>
-       <span>
-        आरव &middot; now
-       </span>
-      </div>
-      <div class="body">
-       नमस्ते, मैं डॉक्टर के पास जाना चाहता हूँ।
-      </div>
-      <div class="alt">
-       Hello, I want to go to the doctor.
-      </div>
-     </div>
-    </div>
-   </section>
-   <!-- ===================== HOME ===================== -->
-   <section aria-labelledby="h-home" class="screen hidden" id="screen-home">
-    <h1 id="h-home" tabindex="-1">
-     Start a conversation
-    </h1>
-    <p class="muted">
-     Everyone joins the same room code from their own device &mdash; and receives messages in their own format.
-    </p>
-    <div class="grid two" style="margin-top:.9rem">
-     <div class="card">
-      <h2>
-       Create a room
-      </h2>
-      <p class="small muted">
-       Open a room and read out the code. Works across tabs on this device instantly.
-      </p>
-      <button class="btn primary wide" id="btn-create" style="margin-top:.5rem" type="button">
-       Create room
-      </button>
-     </div>
-     <div class="card">
-      <h2>
-       Join a room
-      </h2>
-      <label class="field" for="room-code">
-       <span class="lbl">
-        Room code
-       </span>
-       <input autocapitalize="characters" autocomplete="off" id="room-code" maxlength="20" placeholder="e.g. SANKET-42" type="text"/>
-      </label>
-      <button class="btn wide" id="btn-join" type="button">
-       Join room
-      </button>
-      <p class="small muted" id="home-msg" role="status" style="margin-top:.5rem">
-      </p>
-     </div>
-    </div>
-    <div class="card" style="margin-top:.9rem">
-     <h3>
-      Not ready to talk to anyone yet?
-     </h3>
-     <p class="small muted">
-      Run a solo room to try every input and output mode, or measure real recognition accuracy on your own mic and accent.
-     </p>
-     <div class="row" style="margin-top:.5rem">
-      <button class="btn" id="btn-solo" type="button">
-       Solo demo room
-      </button>
-      <button class="btn" data-go="lab" type="button">
-       Open accuracy lab
-      </button>
-     </div>
-    </div>
-   </section>
-   <!-- ===================== SESSION ===================== -->
-   <section aria-labelledby="h-session" class="screen hidden" id="screen-session">
-    <h1 class="sr" id="h-session">
-     Conversation
-    </h1>
-    <div class="session-head">
-     <div class="row" style="gap:.6rem">
-      <span class="small muted">
-       Room
-      </span>
-      <span class="roomcode" id="room-label">
-       &mdash;
-      </span>
-      <button class="btn sm ghost" id="btn-copy" type="button">
-       Copy
-      </button>
-     </div>
-     <div class="row" style="gap:.4rem">
-      <span class="chip" id="peer-count">
-       1 participant
-      </span>
-      <button aria-pressed="false" class="btn sm" id="btn-voicecmd" type="button">
-       Voice commands
-      </button>
-      <button class="btn sm" id="btn-export" type="button">
-       Download transcript
-      </button>
-      <button class="btn sm ghost" id="btn-leave" type="button">
-       Leave
-      </button>
-     </div>
-    </div>
-    <div class="grid two">
-     <div class="card" style="display:flex;flex-direction:column">
-      <div class="row spread">
-       <h2 style="margin:0">
-        Conversation
-       </h2>
-       <span class="chip" id="out-chip">
-        text + audio
-       </span>
-      </div>
-      <div aria-label="Messages" aria-live="polite" aria-relevant="additions text" class="messages" id="messages" role="log" style="margin-top:.6rem">
-       <p class="empty">
-        No messages yet. Use the composer to send the first one.
-       </p>
-      </div>
-      <ul class="row" id="peers" style="list-style:none;padding:0;margin:.7rem 0 0;gap:.35rem">
-      </ul>
-     </div>
-     <div class="card" id="composer" tabindex="-1">
-      <h2>
-       Send a message
-      </h2>
-      <div aria-label="Input method" class="tabs" role="tablist">
-       <button aria-controls="pane-speak" aria-selected="true" class="tab" id="tab-speak" role="tab" type="button">
-        Speak
-       </button>
-       <button aria-controls="pane-type" aria-selected="false" class="tab" id="tab-type" role="tab" type="button">
-        Type
-       </button>
-       <button aria-controls="pane-sign" aria-selected="false" class="tab" id="tab-sign" role="tab" type="button">
-        Sign
-       </button>
-      </div>
-      <div aria-labelledby="tab-speak" id="pane-speak" role="tabpanel">
-       <div class="micwrap">
-        <button aria-describedby="mic-hint" aria-pressed="false" class="mic" id="btn-mic" type="button">
-         <svg aria-hidden="true" fill="none" height="46" stroke="currentColor" stroke-linecap="round" stroke-width="1.8" viewbox="0 0 24 24" width="46">
-          <rect height="11" rx="3" width="6" x="9" y="2.5">
-          </rect>
-          <path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v3.5">
-          </path>
-         </svg>
-         <span class="sr">
-          Start speaking
-         </span>
-        </button>
-        <p class="small muted" id="mic-hint" style="text-align:center;margin:0">
-         Tap, speak, then confirm. Works best in Chrome / Edge.
-        </p>
-       </div>
-       <div aria-live="polite" class="transcript" id="transcript">
-        Your words will appear here&hellip;
-       </div>
-       <div class="row" style="margin-top:.5rem">
-        <span class="chip hidden" id="conf-chip">
-        </span>
-        <span class="chip" id="lang-chip">
-         हिन्दी
-        </span>
-       </div>
-       <div class="row hidden" id="speak-actions" style="margin-top:.6rem">
-        <button class="btn primary" id="btn-send-speak" type="button">
-         Send
-        </button>
-        <button class="btn" id="btn-edit-speak" type="button">
-         Edit as text
-        </button>
-        <button class="btn ghost" id="btn-clear-speak" type="button">
-         Discard
-        </button>
-       </div>
-       <p class="small hidden" id="confirm-note" role="status" style="color:var(--warn);margin-top:.5rem">
-       </p>
-      </div>
-      <div aria-labelledby="tab-type" class="hidden" id="pane-type" role="tabpanel">
-       <label class="field" for="txt-input">
-        <span class="lbl sr">
-         Message text
-        </span>
-        <textarea id="txt-input" placeholder="Type in हिन्दी or English&hellip;"></textarea>
-       </label>
-       <div class="row">
-        <button class="btn primary" id="btn-send-type" type="button">
-         Send
-        </button>
-        <button class="btn ghost" id="btn-speak-type" type="button">
-         Preview aloud
-        </button>
-       </div>
-      </div>
-      <div aria-labelledby="tab-sign" class="hidden" id="pane-sign" role="tabpanel">
-       <p class="small muted" style="margin-top:0">
-        Validated vocabulary (12 glosses). Each card sends a text gloss &mdash; it is not a machine translation of continuous ISL.
-       </p>
-       <div class="gloss" id="glossGrid">
-       </div>
-       <hr style="border:0;border-top:1px solid var(--line);margin:1rem 0"/>
-       <div class="row spread">
-        <h3 style="margin:0">
-         Experimental handshape camera
-        </h3>
-        <button aria-pressed="false" class="btn sm" id="btn-cam" type="button">
-         Start camera
-        </button>
-       </div>
-       <p class="small muted">
-        Reads static handshape with MediaPipe landmarks and a rule-based finger-extension classifier. Heuristic only &mdash; not ISL grammar, not validated translation.
-       </p>
-       <div class="camwrap hidden" id="camWrap">
-        <video id="cam" muted="" playsinline="">
-        </video>
-        <canvas height="480" id="camCanvas" width="640">
-        </canvas>
-       </div>
-       <p class="small" id="camStatus" role="status" style="min-height:1.4rem">
-       </p>
-       <div class="row hidden" id="camActions">
-        <span class="chip" id="camLabel">
-         &mdash;
-        </span>
-        <button class="btn sm" id="btn-cam-send" type="button">
-         Add to message
-        </button>
-       </div>
-      </div>
-     </div>
-    </div>
-   </section>
-   <!-- ===================== ACCURACY LAB ===================== -->
-   <section aria-labelledby="h-lab" class="screen hidden" id="screen-lab">
-    <h1 id="h-lab" tabindex="-1">
-     Accuracy lab &mdash; measure, don't guess
-    </h1>
-    <p class="muted">
-     Read the sentence exactly as shown, and Sanket scores your recogniser on this device, with your mic, in your room. Accuracy = 100 &times; (1 &minus; Word Error Rate).
-    </p>
-    <div class="card" style="margin-top:.9rem">
-     <div class="row spread">
-      <div class="row">
-       <label class="small muted" for="lab-lang">
-        Language
-       </label>
-       <select id="lab-lang" style="min-width:12rem">
-        <option value="hi-IN">
-         हिन्दी (Hindi)
-        </option>
-        <option value="en-IN">
-         English (India)
-        </option>
-       </select>
-      </div>
-      <button class="btn sm ghost" id="btn-lab-reset" type="button">
-       Reset scores
-      </button>
-     </div>
-     <div style="margin-top:.8rem;padding:.9rem;border-radius:12px;border:1px dashed var(--line);background:var(--bg2)">
-      <p class="small muted" style="margin:0 0 .25rem">
-       Reference sentence
-      </p>
-      <p id="lab-sentence" style="font-size:1.25rem;font-weight:700;margin:0">
-       &mdash;
-      </p>
-      <p class="small muted" id="lab-hint" style="margin:.25rem 0 0">
-      </p>
-     </div>
-     <div class="row" style="margin-top:.8rem">
-      <button class="btn primary" id="btn-lab-record" type="button">
-       Record &amp; measure
-      </button>
-      <button class="btn" id="btn-lab-next" type="button">
-       Next sentence &rarr;
-      </button>
-     </div>
-     <p class="small muted" id="lab-status" role="status" style="min-height:1.4rem">
-     </p>
-     <div class="hidden" id="lab-results" style="margin-top:.6rem">
-      <div class="row spread" style="align-items:flex-end">
-       <div>
-        <p class="small muted" style="margin:0">
-         Measured word accuracy
-        </p>
-        <p class="badge-acc" id="lab-agg">
-         &mdash;
-        </p>
-       </div>
-       <p class="small muted" id="lab-meta" style="text-align:right;margin:0">
-       </p>
-      </div>
-      <table>
-       <caption class="sr">
-        Per-sentence recognition results
-       </caption>
-       <thead>
-        <tr>
-         <th scope="col">
-          #
-         </th>
-         <th scope="col">
-          You said (hypothesis)
-         </th>
-         <th scope="col">
-          WER
-         </th>
-         <th scope="col">
-          Accuracy
-         </th>
-        </tr>
-       </thead>
-       <tbody id="lab-tbody">
-       </tbody>
-      </table>
-     </div>
-     <div class="card" style="margin-top:1rem;box-shadow:none;background:var(--bg2)">
-      <h3>
-       Why you will not see &ldquo;99% accurate&rdquo; on this page
-      </h3>
-      <p class="small">
-       Speech accuracy is not one number. It moves with accent, mic, distance, noise, vocabulary and language. Published benchmarks put Hindi ASR at roughly 16% word error rate for the best cloud engine on read speech &mdash; about 84% word accuracy &mdash; and it drops sharply for spontaneous, noisy, code-mixed speech
-        (
-       <a href="https://arxiv.org/html/2602.03868v2" rel="noopener" target="_blank">
-        ASR benchmark for Indian languages
-       </a>
-       ).
-      </p>
-      <p class="small">
-       Sign-language papers quoting 99%+ are closed-set classification on one signer and a fixed vocabulary, not translation
-        (
-       <a href="https://arxiv.org/html/2507.20414v1" rel="noopener" target="_blank">
-        ISL detection
-       </a>
-       ,
-       <a href="https://www.sciencedirect.com/science/article/pii/S2590005622000121" rel="noopener" target="_blank">
-        SURF+SVM
-       </a>
-       ).
-        That is exactly the claim shape Sanket uses: a constrained vocabulary, honest confidence, and a clarify step instead of a guess.
-      </p>
-     </div>
-    </div>
-   </section>
-   <!-- ===================== ABOUT ===================== -->
-   <section aria-labelledby="h-about" class="screen hidden" id="screen-about">
-    <h1 id="h-about" tabindex="-1">
-     How Sanket works
-    </h1>
-    <p class="muted">
-     Three layers, one conversation. Input, interpretation, output &mdash; chosen independently by each participant.
-    </p>
-    <div class="grid three" style="margin-top:.9rem">
-     <div class="card">
-      <h3>
-       A &middot; Input
-      </h3>
-      <ul class="tight small">
-       <li>
-        Speech (hi-IN, en-IN)
-       </li>
-       <li>
-        ISL gloss cards (validated)
-       </li>
-       <li>
-        Experimental handshape camera
-       </li>
-       <li>
-        Text / assistive switch
-       </li>
-      </ul>
-     </div>
-     <div class="card">
-      <h3>
-       B &middot; Interpretation
-      </h3>
-      <ul class="tight small">
-       <li>
-        Speech recognition + confidence
-       </li>
-       <li>
-        Language identification
-       </li>
-       <li>
-        Phrasebook translation (on-device demo)
-       </li>
-       <li>
-        Uncertainty &rarr; confirmation step
-       </li>
-      </ul>
-     </div>
-     <div class="card">
-      <h3>
-       C &middot; Output
-      </h3>
-      <ul class="tight small">
-       <li>
-        Spoken audio (TTS, rate control)
-       </li>
-       <li>
-        Large text + screen readers
-       </li>
-       <li>
-        Haptic alerts
-       </li>
-       <li>
-        Per-recipient formatting
-       </li>
-      </ul>
-     </div>
-    </div>
-    <div class="card" style="margin-top:.9rem">
-     <h3>
-      What is built, and what is not
-     </h3>
-     <table>
-      <thead>
-       <tr>
-        <th scope="col">
-         Capability
-        </th>
-        <th scope="col">
-         Status in this build
-        </th>
-       </tr>
-      </thead>
-      <tbody>
-       <tr>
-        <td>
-         Accessible onboarding, combinable preferences
-        </td>
-        <td>
-         <span class="chip ok">
-          working
-         </span>
-        </td>
-       </tr>
-       <tr>
-        <td>
-         Room create / join, multi-participant, realtime
-        </td>
-        <td>
-         <span class="chip ok">
-          working (same-browser tabs; Supabase Realtime for devices)
-         </span>
-        </td>
-       </tr>
-       <tr>
-        <td>
-         Speech &rarr; text with confidence + clarify
-        </td>
-        <td>
-         <span class="chip ok">
-          working
-         </span>
-        </td>
-       </tr>
-       <tr>
-        <td>
-         Text &rarr; speech, rate &amp; voice selection
-        </td>
-        <td>
-         <span class="chip ok">
-          working
-         </span>
-        </td>
-       </tr>
-       <tr>
-        <td>
-         Recipient-specific output
-        </td>
-        <td>
-         <span class="chip ok">
-          working
-         </span>
-        </td>
-       </tr>
-       <tr>
-        <td>
-         ISL: 12 validated gloss cards
-        </td>
-        <td>
-         <span class="chip sign">
-          working, constrained
-         </span>
-        </td>
-       </tr>
-       <tr>
-        <td>
-         ISL: continuous translation / grammar
-        </td>
-        <td>
-         <span class="chip bad">
-          not built &mdash; not claimed
-         </span>
-        </td>
-       </tr>
-       <tr>
-        <td>
-         Handshape classifier (landmarks, heuristic)
-        </td>
-        <td>
-         <span class="chip warn">
-          experimental
-         </span>
-        </td>
-       </tr>
-       <tr>
-        <td>
-         Free-text translation between any language pair
-        </td>
-        <td>
-         <span class="chip warn">
-          phrasebook only; backend needed
-         </span>
-        </td>
-       </tr>
-       <tr>
-        <td>
-         Braille output, emotion detection, signing avatars
-        </td>
-        <td>
-         <span class="chip bad">
-          out of scope v1
-         </span>
-        </td>
-       </tr>
-      </tbody>
-     </table>
-    </div>
-    <div class="grid two" style="margin-top:.9rem">
-     <div class="card">
-      <h3>
-       3-minute judge demo script
-      </h3>
-      <ul class="tight small">
-       <li>
-        <strong>
-         Tab A
-        </strong>
-        (hearing, Hindi speaker): onboarding &rarr; Speak + Read + Hear.
-       </li>
-       <li>
-        <strong>
-         Tab B
-        </strong>
-        (Deaf participant): onboarding &rarr; Sign + Read text only.
-       </li>
-       <li>
-        Both join room
-        <em>
-         SANKET-42
-        </em>
-        .
-       </li>
-       <li>
-        A speaks: &ldquo;मुझे डॉक्टर के पास जाना है&rdquo; &rarr; B sees large text instantly, no audio forced on them.
-       </li>
-       <li>
-        B taps the &ldquo;मदद&rdquo; gloss &rarr; A hears &ldquo;Help&rdquo; spoken aloud and sees it as text.
-       </li>
-       <li>
-        Say something unclear &rarr; Sanket asks to confirm instead of sending a wrong message.
-       </li>
-       <li>
-        Open the Accuracy lab, read 3 sentences, show the measured number and explain what it depends on.
-       </li>
-      </ul>
-     </div>
-     <div class="card">
-      <h3>
-       Deploying past this demo
-      </h3>
-      <dl class="kv small">
-       <dt>
-        App
-       </dt>
-       <dd>
-        React Native + Expo (TypeScript, Expo Router) &rarr; this UI maps 1:1.
-       </dd>
-       <dt>
-        API
-       </dt>
-       <dd>
-        FastAPI on Cloud Run: /session, /messages, /stt, /tts, /translate, /isl/recognise.
-       </dd>
-       <dt>
-        Data
-       </dt>
-       <dd>
-        Supabase Postgres + Auth + Realtime; RLS per room; no raw audio/video stored.
-       </dd>
-       <dt>
-        Speech
-       </dt>
-       <dd>
-        Google Cloud STT/TTS (hi-IN, en-IN) + native TTS fallback offline.
-       </dd>
-       <dt>
-        ISL
-       </dt>
-       <dd>
-        MediaPipe landmarks &rarr; PyTorch temporal model &rarr; confidence gate &rarr; human review.
-       </dd>
-       <dt>
-        Accuracy
-       </dt>
-       <dd>
-        Per-language WER tracked in CI with a checked-in test set, not a marketing number.
-       </dd>
-      </dl>
-     </div>
-    </div>
-    <div class="card" style="margin-top:.9rem">
-     <h3>
-      Known limits (say these out loud in Round 3)
-     </h3>
-     <ul class="tight small">
-      <li>
-       Browser speech recognition needs HTTPS or localhost, and is unavailable in Firefox / most Safari versions.
-      </li>
-      <li>
-       Cross-device realtime needs the Supabase channel &mdash; this file uses same-browser tabs.
-      </li>
-      <li>
-       Translation of free text is a demo phrasebook; production uses an API with human review for medical/legal content.
-      </li>
-      <li>
-       Handshape camera is a heuristic; the validated path is the gloss vocabulary.
-      </li>
-      <li>
-       No raw video or audio is stored by this build. Nothing is sent to a server.
-      </li>
-     </ul>
-    </div>
-   </section>
-  </main>
-  <div aria-atomic="true" aria-live="polite" class="sr" id="live">
-  </div>
-  <script defer="" src="./app.js">
-  </script>
- </body>
+
+  <!-- Mobile Bottom Navigation -->
+  <nav class="bottom-nav" aria-label="Mobile navigation">
+    <button class="bnav-btn active" data-nav="home" type="button">🏠<span>Home</span></button>
+    <button class="bnav-btn" data-nav="nearby" type="button">📲<span>Nearby</span></button>
+    <button class="bnav-btn" data-nav="session" type="button">💬<span>Chat</span></button>
+    <button class="bnav-btn" data-nav="prefs" type="button">🎛️<span>Prefs</span></button>
+  </nav>
+
+  <script src="app.js"></script>
+</body>
 </html>

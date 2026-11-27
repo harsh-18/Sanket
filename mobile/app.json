@@ -1,0 +1,43 @@
+{
+  "expo": {
+    "name": "Sanket",
+    "slug": "sanket",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "backgroundColor": "#F8F9FF",
+      "resizeMode": "contain"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "in.sanket.app",
+      "deploymentTarget": "15.1",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Sanket uses your camera only when you choose to scan a Nearby pairing QR code or sign in Indian Sign Language.",
+        "NSMicrophoneUsageDescription": "Sanket uses your microphone only when you tap Speak to transcribe speech for your conversation partner."
+      }
+    },
+    "android": {
+      "package": "in.sanket.app",
+      "compileSdkVersion": 35,
+      "targetSdkVersion": 35,
+      "minSdkVersion": 24,
+      "adaptiveIcon": {
+        "backgroundColor": "#EAE8FF"
+      },
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
+      ]
+    },
+    "plugins": [
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow Sanket to access your camera for QR pairing and Indian Sign Language input."
+        }
+      ]
+    ]
+  }
+}
