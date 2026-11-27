@@ -1,0 +1,9 @@
+services:
+  sanket:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: sanket-app
+    ports:
+      - "8080:80"
+    restart: unless-stopped

@@ -117,7 +117,17 @@ Sanket/
 
 ## Run Locally
 
-No build step is needed for this prototype.
+No build step or secret API keys are needed for this prototype.
+
+### Option 1: Docker (One Command)
+
+```bash
+docker compose up --build
+```
+
+Open `http://localhost:8080` in **Chrome or Edge**.
+
+### Option 2: Local Static Server
 
 1. **Serve over HTTPS or localhost** (required for microphone/camera access):
    ```bash
@@ -130,7 +140,7 @@ No build step is needed for this prototype.
 2. Open `http://localhost:8000` in **Chrome or Edge**.
 3. Grant microphone and camera permissions when prompted.
 
-> **Note:** Opening `index.html` as a `file://` URL will block microphone access. Speech output still works.
+> **Note:** Opening `index.html` as a `file://` URL will block microphone access. Speech output still works. All core features run directly in the browser without requiring any external API keys.
 
 ---
 
