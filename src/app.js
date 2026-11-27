@@ -495,34 +495,68 @@
     GOOD:       { words: ['good','great','accha','thik','theek','अच्छा','ठीक','बढ़िया'], icon: '👌', hi: 'अच्छा / ठीक', desc: 'Thumb & index circle / chin-to-palm out', anim: 'anim-out', dir: '✓ GOOD', pose: 'ok-hand' }
   };
 
-  // Distinct two-handed ISL manual alphabet instructions & hand-pose geometry per letter
+  // Distinct two-handed ISL manual alphabet: [instruction, left-hand pose, right-hand pose, contact/shape type]
   var ISL_ALPHA = {
-    A: ['Touch right index finger to left thumb tip', [1,0,0,0,0]],
-    B: ['Form circles with both hands like binoculars', [1,1,0,0,0]],
-    C: ['Curve thumb and index into a C-shape', [1,1,0,0,0]],
-    D: ['Curve right index & thumb onto left index', [1,1,0,0,0]],
-    E: ['Touch right index tip to left index tip', [0,1,0,0,0]],
-    F: ['Cross right index & middle over left two fingers', [0,1,1,0,0]],
-    G: ['Stack closed right fist atop closed left fist', [0,0,0,0,0]],
-    H: ['Slide flat right palm across flat left palm', [1,1,1,1,1]],
-    I: ['Touch right index to left middle fingertip', [0,1,0,0,0]],
-    J: ['Trace down left middle finger onto palm', [0,1,0,0,0]],
-    K: ['Hook bent right index onto left index', [0,1,0,0,0]],
-    L: ['Rest right index finger flat on left palm', [0,1,0,0,0]],
-    M: ['Place three right fingers onto left palm', [0,1,1,1,0]],
-    N: ['Place two right fingers onto left palm', [0,1,1,0,0]],
-    O: ['Touch right index to left ring fingertip (O-ring)', [1,1,1,1,0]],
-    P: ['Circle right thumb & index onto left index tip', [1,1,0,0,0]],
-    Q: ['Hook right index around left thumb-index ring', [1,1,0,0,0]],
-    R: ['Curve right index onto open left palm', [0,1,0,0,0]],
-    S: ['Hook right pinky with left pinky finger', [0,0,0,0,1]],
-    T: ['Point right index to lower edge of left palm', [0,1,0,0,0]],
-    U: ['Point right index to left pinky fingertip', [0,0,0,0,1]],
-    V: ['Form V with index & middle on left palm', [0,1,1,0,0]],
-    W: ['Interlock fingers of both open hands', [1,1,1,1,1]],
-    X: ['Cross both extended index fingers in an X', [0,1,0,0,0]],
-    Y: ['Touch right index into web of left thumb & index', [1,1,0,0,0]],
-    Z: ['Rest right fingertips against open left palm', [1,1,1,1,1]]
+    A: ['Touch right index tip to left thumb tip', 'thumb-up', 'point', 'tip-touch'],
+    B: ['Form two thumb-index circles side-by-side (binoculars)', 'circle', 'circle', 'two-circle'],
+    C: ['Curve right thumb & index into an open C-arc', 'rest', 'c-arc', 'c-shape'],
+    D: ['Curve right index & thumb onto upright left index', 'index-up', 'c-arc', 'd-loop'],
+    E: ['Touch right index tip to upright left index tip', 'index-up', 'point', 'tip-touch'],
+    F: ['Cross right index & middle over left index & middle', 'two-up', 'two-cross', 'cross'],
+    G: ['Stack closed right fist directly atop closed left fist', 'fist', 'fist', 'stack'],
+    H: ['Slide flat right palm across open flat left palm', 'flat-palm', 'flat-palm', 'slide'],
+    I: ['Touch right index tip to left middle fingertip', 'mid-up', 'point', 'tip-touch'],
+    J: ['Slide right index down left middle finger onto palm', 'flat-palm', 'point', 'trace-down'],
+    K: ['Hook bent right index finger onto upright left index', 'index-up', 'hook', 'hook'],
+    L: ['Lay right index finger flat across open left palm', 'flat-palm', 'index-flat', 'lay-flat'],
+    M: ['Place three right fingers flat onto open left palm', 'flat-palm', 'three-down', 'three-on-palm'],
+    N: ['Place two right fingers flat onto open left palm', 'flat-palm', 'two-down', 'two-on-palm'],
+    O: ['Touch right index tip to left ring fingertip (O-ring)', 'ring-up', 'point', 'o-ring'],
+    P: ['Circle right thumb & index onto upright left index tip', 'index-up', 'circle', 'p-loop'],
+    Q: ['Hook right index into left thumb-index circle', 'circle', 'hook', 'q-hook'],
+    R: ['Curve right index finger onto open left palm', 'flat-palm', 'hook', 'lay-flat'],
+    S: ['Hook right little finger with left little finger', 'pinky-up', 'pinky-hook', 'hook'],
+    T: ['Point right index to lower edge of left palm', 'flat-palm', 'point', 'edge-touch'],
+    U: ['Point right index tip to left little fingertip', 'pinky-up', 'point', 'tip-touch'],
+    V: ['Place right V-fingers (index + middle) on left palm', 'flat-palm', 'v-up', 'v-on-palm'],
+    W: ['Interlock open fingers of both hands together', 'spread', 'spread', 'interlock'],
+    X: ['Cross both extended index fingers in an X', 'index-up', 'index-cross', 'x-cross'],
+    Y: ['Touch right index into web between left thumb & index', 'l-web', 'point', 'web-touch'],
+    Z: ['Rest right fingertips against upright left palm', 'flat-palm', 'flat-palm', 't-touch']
+  };
+
+  var HINDI_AKSHAR = {
+    'अ': 'Open palm facing forward, thumb tucked',
+    'आ': 'Open palm moving slightly outward (long vowel)',
+    'इ': 'Upright little finger held steady',
+    'ई': 'Upright little finger lifted upward',
+    'उ': 'Curved U-handshape with thumb & index',
+    'ऊ': 'Curved U-handshape swept outward',
+    'ए': 'Index & middle fingers together pointing up',
+    'ओ': 'Rounded O-handshape held at cheek level',
+    'क': 'Thumb & index pinched, three fingers raised',
+    'ख': 'Open spread hand with slight outward flick',
+    'ग': 'Downward curved fist with index & thumb',
+    'घ': 'Curved hand held near throat/chest',
+    'च': 'Curved C-handshape facing side',
+    'ज': 'Index & middle fingers pointing forward',
+    'ट': 'Bent index & middle hooked downward',
+    'ड': 'Curved fist rotated slightly',
+    'त': 'Index tip touching thumb tip, palm out',
+    'द': 'Two fingers extended forward, palm down',
+    'न': 'Two fingers resting on opposite palm',
+    'प': 'Flat palm facing down, fingers together',
+    'फ': 'Open palm flicked outward (aspirated)',
+    'ब': 'Flat hand held upright, thumb tucked',
+    'भ': 'Both palms cupped slightly forward',
+    'म': 'Three fingers resting on opposite palm',
+    'य': 'Thumb & little finger extended (Y-frame)',
+    'र': 'Crossed index & middle fingers',
+    'ल': 'Thumb & index forming an L-angle',
+    'व': 'Index & middle spread in a V-shape',
+    'श': 'Flat hand sweeping gently side-to-side',
+    'स': 'Closed fist with thumb across fingers',
+    'ह': 'Flat palm sliding across opposite palm'
   };
 
   var WORD_TO_GLOSS = {};
@@ -531,45 +565,81 @@
   });
 
   function renderFlashcardSvg(item) {
-    var f = item.fingers || [1, 1, 1, 1, 1];
     var label = item.badge || item.gloss.slice(0, 3);
+    var shape = item.shape || 'word';
     var accent = item.isAlpha ? '#6655D9' : '#0F6B48';
-    var xs = [16, 25, 34, 43, 52];
-    var tips = [30, 14, 10, 14, 22];
-    var fingersSvg = xs.map(function (x, i) {
-      var up = f[i];
-      var y2 = up ? tips[i] : 36;
-      return '<line x1="' + x + '" y1="42" x2="' + x + '" y2="' + y2 + '" stroke="' + accent + '" stroke-width="4" stroke-linecap="round"/>' +
-             (up ? '<circle cx="' + x + '" cy="' + y2 + '" r="2.6" fill="#20233B"/>' : '');
-    }).join('');
+    var left = '#20233B', right = accent;
+    var body = '';
+
+    if (shape === 'two-circle') {
+      body = '<circle cx="24" cy="38" r="11" fill="none" stroke="' + left + '" stroke-width="3.5"/>' +
+             '<circle cx="44" cy="38" r="11" fill="none" stroke="' + right + '" stroke-width="3.5"/>';
+    } else if (shape === 'c-shape') {
+      body = '<path d="M46 24 A15 15 0 1 0 46 52" fill="none" stroke="' + right + '" stroke-width="5" stroke-linecap="round"/>';
+    } else if (shape === 'x-cross' || shape === 'cross') {
+      body = '<line x1="20" y1="22" x2="48" y2="52" stroke="' + left + '" stroke-width="4.5" stroke-linecap="round"/>' +
+             '<line x1="48" y1="22" x2="20" y2="52" stroke="' + right + '" stroke-width="4.5" stroke-linecap="round"/>';
+    } else if (shape === 'slide' || shape === 't-touch') {
+      body = '<rect x="14" y="42" width="40" height="12" rx="5" fill="' + left + '" opacity="0.22" stroke="' + left + '" stroke-width="2.5"/>' +
+             '<rect x="20" y="24" width="28" height="12" rx="5" fill="' + right + '" opacity="0.3" stroke="' + right + '" stroke-width="2.5"/>' +
+             '<path d="M22 20 L46 20 M42 16 L46 20 L42 24" fill="none" stroke="' + right + '" stroke-width="2.2" stroke-linecap="round"/>';
+    } else if (shape === 'interlock') {
+      body = '<path d="M18 28 L34 42 M24 24 L40 38 M30 22 L46 36" stroke="' + left + '" stroke-width="3.5" stroke-linecap="round"/>' +
+             '<path d="M50 28 L34 42 M44 24 L28 38 M38 22 L22 36" stroke="' + right + '" stroke-width="3.5" stroke-linecap="round"/>';
+    } else if (shape === 'o-ring' || shape === 'd-loop' || shape === 'p-loop' || shape === 'q-hook') {
+      body = '<line x1="22" y1="54" x2="22" y2="22" stroke="' + left + '" stroke-width="4" stroke-linecap="round"/>' +
+             '<circle cx="38" cy="34" r="10" fill="none" stroke="' + right + '" stroke-width="3.5"/>' +
+             '<circle cx="22" cy="22" r="3" fill="' + right + '"/>';
+    } else if (shape === 'stack') {
+      body = '<rect x="20" y="42" width="28" height="16" rx="6" fill="' + left + '" opacity="0.25" stroke="' + left + '" stroke-width="2.5"/>' +
+             '<rect x="20" y="22" width="28" height="16" rx="6" fill="' + right + '" opacity="0.3" stroke="' + right + '" stroke-width="2.5"/>';
+    } else if (shape === 'web-touch') {
+      body = '<path d="M18 52 L18 24 M18 44 L34 32" stroke="' + left + '" stroke-width="4.5" stroke-linecap="round"/>' +
+             '<line x1="50" y1="26" x2="26" y2="38" stroke="' + right + '" stroke-width="4" stroke-linecap="round"/>' +
+             '<circle cx="26" cy="38" r="3.5" fill="' + right + '"/>';
+    } else if (shape === 'v-on-palm') {
+      body = '<rect x="14" y="44" width="40" height="12" rx="5" fill="' + left + '" opacity="0.22" stroke="' + left + '" stroke-width="2.5"/>' +
+             '<path d="M34 44 L24 22 M34 44 L44 22" stroke="' + right + '" stroke-width="4" stroke-linecap="round"/>';
+    } else if (shape === 'two-on-palm' || shape === 'three-on-palm' || shape === 'lay-flat') {
+      var cnt = shape === 'three-on-palm' ? 3 : (shape === 'two-on-palm' ? 2 : 1);
+      var lines = '';
+      for (var k = 0; k < cnt; k++) lines += '<line x1="' + (26 + k * 8) + '" y1="22" x2="' + (26 + k * 8) + '" y2="42" stroke="' + right + '" stroke-width="3.8" stroke-linecap="round"/>';
+      body = '<rect x="14" y="42" width="40" height="13" rx="5" fill="' + left + '" opacity="0.22" stroke="' + left + '" stroke-width="2.5"/>' + lines;
+    } else if (shape === 'hook' || shape === 'trace-down' || shape === 'tip-touch' || shape === 'edge-touch') {
+      body = '<line x1="22" y1="54" x2="22" y2="24" stroke="' + left + '" stroke-width="4.5" stroke-linecap="round"/>' +
+             '<path d="M48 28 Q34 22 24 28" fill="none" stroke="' + right + '" stroke-width="4" stroke-linecap="round"/>' +
+             '<circle cx="24" cy="28" r="3" fill="' + right + '"/>';
+    } else {
+      // Hindi akshar or word flashcard
+      body = '<rect x="14" y="22" width="40" height="36" rx="10" fill="' + accent + '" opacity="0.16" stroke="' + accent + '" stroke-width="2"/>' +
+             '<text x="34" y="47" text-anchor="middle" font-family="Inter,Noto Sans Devanagari,sans-serif" font-size="22" font-weight="800" fill="#20233B">' + label + '</text>';
+    }
+
     return '<svg viewBox="0 0 68 68" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
-      '<rect x="14" y="38" width="40" height="20" rx="8" fill="' + accent + '" opacity="0.22" stroke="' + accent + '" stroke-width="2"/>' +
-      fingersSvg +
+      body +
       '<rect x="2" y="2" width="24" height="16" rx="6" fill="#20233B"/>' +
-      '<text x="14" y="13" text-anchor="middle" font-family="Inter,sans-serif" font-size="10" font-weight="800" fill="#FFFFFF">' + label + '</text>' +
+      '<text x="14" y="13" text-anchor="middle" font-family="Inter,Noto Sans Devanagari,sans-serif" font-size="10" font-weight="800" fill="#FFFFFF">' + label + '</text>' +
       '</svg>';
   }
 
   function textToIslSequence(text) {
     var clean = String(text || '').toLowerCase().replace(/[?!.,।:;'"()]/g, ' ').trim();
-    if (!clean) return [{ gloss: 'HELLO', icon: '🙏', hi: 'नमस्ते', desc: ISL_SIGNS.HELLO.desc, anim: 'anim-nod', dir: '↕ BOW', fingers: [1,1,1,1,1], badge: '🙏' }];
+    if (!clean) return [{ gloss: 'HELLO', icon: '🙏', hi: 'नमस्ते', desc: ISL_SIGNS.HELLO.desc, anim: 'anim-nod', dir: '↕ BOW', badge: '🙏', shape: 'word' }];
     var raw = clean.split(/\s+/), seq = [];
     raw.forEach(function (tok) {
       if (!tok || ISL_STOP[tok]) return;
       var g = WORD_TO_GLOSS[tok];
       if (g) {
         var s = ISL_SIGNS[g];
-        seq.push({ gloss: g, icon: s.icon, hi: s.hi, desc: s.desc, anim: s.anim, dir: s.dir, fingers: [1,1,1,1,1], badge: s.icon });
+        seq.push({ gloss: g, icon: s.icon, hi: s.hi, desc: s.desc, anim: s.anim, dir: s.dir, badge: s.icon, shape: 'word' });
       } else if (/[\u0900-\u097F]/.test(tok)) {
-        // Hindi Devanagari word not in dictionary -> per-akshar Devanagari ISL flashcards
         var akshars = tok.match(/[\u0900-\u097F][\u093E-\u094D\u0902\u0903]?/g) || [tok];
-        akshars.slice(0, 5).forEach(function (ak, idx) {
-          var code = ak.charCodeAt(0);
+        akshars.slice(0, 5).forEach(function (ak) {
+          var base = ak.charAt(0);
+          var hint = HINDI_AKSHAR[base] || ('Devanagari akshar "' + ak + '" phonetic handshape');
           seq.push({
             gloss: ak, icon: ak, hi: 'अक्षर "' + ak + '"',
-            desc: 'Hindi Akshar flashcard "' + ak + '" (phonetic ISL sign)',
-            anim: 'anim-pulse', dir: 'हिन्दी', isAlpha: true, badge: ak,
-            fingers: [code % 2, (code >> 1) % 2, 1, (code >> 2) % 2, (idx % 2)]
+            desc: hint, anim: 'anim-pulse', dir: 'हिन्दी', isAlpha: true, badge: ak, shape: 'akshar'
           });
         });
       } else {
@@ -578,14 +648,14 @@
           var a = ISL_ALPHA[ch];
           seq.push({
             gloss: ch, icon: ch, hi: 'Letter ' + ch,
-            desc: a ? a[0] : ('Number/Symbol "' + ch + '" handshape'),
+            desc: a ? a[0] : ('Number "' + ch + '" — raise ' + ch + ' finger(s)'),
             anim: 'anim-pulse', dir: 'ISL:' + ch, isAlpha: true, badge: ch,
-            fingers: a ? a[1] : [1, (Number(ch) > 1 ? 1 : 0), (Number(ch) > 2 ? 1 : 0), (Number(ch) > 3 ? 1 : 0), (Number(ch) > 4 ? 1 : 0)]
+            shape: a ? a[3] : 'word'
           });
         });
       }
     });
-    if (!seq.length) seq.push({ gloss: 'HELLO', icon: '🙏', hi: 'नमस्ते', desc: ISL_SIGNS.HELLO.desc, anim: 'anim-nod', dir: '↕ BOW', fingers: [1,1,1,1,1], badge: '🙏' });
+    if (!seq.length) seq.push({ gloss: 'HELLO', icon: '🙏', hi: 'नमस्ते', desc: ISL_SIGNS.HELLO.desc, anim: 'anim-nod', dir: '↕ BOW', badge: '🙏', shape: 'word' });
     return seq.slice(0, 10);
   }
 

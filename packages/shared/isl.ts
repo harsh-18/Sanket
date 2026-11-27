@@ -48,6 +48,35 @@ Object.entries(ISL_SIGNS).forEach(([gloss, def]) => {
   def.words.forEach((w) => { WORD_TO_GLOSS[w] = gloss; });
 });
 
+const ISL_ALPHA_DESC: Record<string, string> = {
+  A: 'Touch right index tip to left thumb tip',
+  B: 'Form two thumb-index circles side-by-side',
+  C: 'Curve right thumb & index into a C-arc',
+  D: 'Curve right index & thumb onto upright left index',
+  E: 'Touch right index tip to upright left index tip',
+  F: 'Cross right index & middle over left two fingers',
+  G: 'Stack closed right fist atop closed left fist',
+  H: 'Slide flat right palm across flat left palm',
+  I: 'Touch right index tip to left middle fingertip',
+  J: 'Slide right index down left middle finger onto palm',
+  K: 'Hook bent right index onto upright left index',
+  L: 'Lay right index finger flat across left palm',
+  M: 'Place three right fingers flat onto left palm',
+  N: 'Place two right fingers flat onto left palm',
+  O: 'Touch right index tip to left ring fingertip',
+  P: 'Circle right thumb & index onto left index tip',
+  Q: 'Hook right index into left thumb-index circle',
+  R: 'Curve right index onto open left palm',
+  S: 'Hook right little finger with left little finger',
+  T: 'Point right index to lower edge of left palm',
+  U: 'Point right index tip to left little fingertip',
+  V: 'Place right V-fingers on left palm',
+  W: 'Interlock open fingers of both hands',
+  X: 'Cross both extended index fingers in an X',
+  Y: 'Touch right index into web of left thumb & index',
+  Z: 'Rest right fingertips against upright left palm',
+};
+
 export function textToIslSequence(text: string): IslSequenceToken[] {
   const clean = String(text || '').toLowerCase().replace(/[?!.,।:;'"()]/g, ' ').trim();
   if (!clean) return [{ gloss: 'HELLO', ...ISL_SIGNS.HELLO }];
@@ -57,16 +86,18 @@ export function textToIslSequence(text: string): IslSequenceToken[] {
     const g = WORD_TO_GLOSS[tok];
     if (g) {
       seq.push({ gloss: g, ...ISL_SIGNS[g] });
+    } else if (/[\u0900-\u097F]/.test(tok)) {
+      const akshars = tok.match(/[\u0900-\u097F][\u093E-\u094D\u0902\u0903]?/g) || [tok];
+      akshars.slice(0, 5).forEach((ak) => seq.push({
+        gloss: ak, icon: ak, hi: `अक्षर "${ak}"`,
+        desc: `Hindi Akshar "${ak}" ISL flashcard`, anim: 'anim-pulse', dir: 'हिन्दी',
+      }));
     } else {
       const chars = tok.replace(/[^a-z0-9]/g, '').slice(0, 6).toUpperCase().split('');
-      if (chars.length) {
-        chars.forEach((ch) => seq.push({
-          gloss: ch, icon: '🤟', hi: `अक्षर ${ch}`,
-          desc: `ISL Fingerspelling letter "${ch}"`, anim: 'anim-pulse', dir: `FS:${ch}`,
-        }));
-      } else {
-        seq.push({ gloss: tok.slice(0, 10).toUpperCase(), icon: '💬', hi: tok, desc: `Visual word card: ${tok}`, anim: 'anim-pulse', dir: 'WORD' });
-      }
+      chars.forEach((ch) => seq.push({
+        gloss: ch, icon: ch, hi: `Letter ${ch}`,
+        desc: ISL_ALPHA_DESC[ch] || `Number "${ch}" handshape`, anim: 'anim-pulse', dir: `ISL:${ch}`,
+      }));
     }
   }
   return seq.length ? seq.slice(0, 10) : [{ gloss: 'HELLO', ...ISL_SIGNS.HELLO }];
