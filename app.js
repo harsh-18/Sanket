@@ -681,14 +681,24 @@
     var row = document.createElement('div');
     row.style.display = 'flex'; row.style.gap = '.5rem'; row.style.alignItems = 'center'; row.style.flexWrap = 'wrap';
     var replay = document.createElement('button'); replay.type = 'button'; replay.className = 'btn sm ghost'; replay.textContent = '↻ Replay Signs';
-    var attr = document.createElement('span'); attr.className = 'isl-attr'; attr.textContent = 'ISL Flashcards · ISLRTC / AI4Bharat INCLUDE';
+    var attr = document.createElement('span'); attr.className = 'isl-attr'; attr.textContent = 'ISL Sign Cards · ISLVT (Waghmare & Deshpande, 2024, doi:10.17632/98mzk82wbb.1)';
     row.appendChild(replay); row.appendChild(attr);
 
     var timerId = null;
     function showIndex(idx) {
       var item = seq[idx];
       gbox.className = 'isl-glyph-box ' + item.anim;
-      svgWrap.innerHTML = renderFlashcardSvg(item);
+      if (item.isAlpha && /^[A-Z1-9]$/.test(item.gloss)) {
+        svgWrap.innerHTML = '';
+        var img = document.createElement('img');
+        img.src = 'assets/isl/' + item.gloss + '.jpg';
+        img.alt = 'ISL sign for ' + item.gloss;
+        img.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:10px;display:block;';
+        img.onerror = function () { svgWrap.innerHTML = renderFlashcardSvg(item); };
+        svgWrap.appendChild(img);
+      } else {
+        svgWrap.innerHTML = renderFlashcardSvg(item);
+      }
       mtag.textContent = item.dir;
       title.textContent = item.gloss + ' · ' + item.hi;
       cap.textContent = item.desc;
