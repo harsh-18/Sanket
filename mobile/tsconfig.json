@@ -1,10 +1,20 @@
 {
-  "extends": "expo/tsconfig.base",
   "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "lib": ["ES2022"],
+    "jsx": "react-native",
     "strict": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "noEmit": true,
     "baseUrl": ".",
     "paths": {
       "@sanket/shared": ["../packages/shared/index.ts"]
     }
-  }
+  },
+  "include": ["App.tsx", "index.ts", "src/**/*", "../packages/shared/**/*"]
 }
