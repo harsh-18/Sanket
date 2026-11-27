@@ -11,8 +11,8 @@
   };
 
   var DEFAULT_PREFS = {
-    name: '', input: ['speech', 'text'], output: ['text', 'audio'],
-    lang: 'hi-IN', fontScale: 1, contrast: 'normal', haptics: true, rate: 1
+    name: '', input: ['speech', 'text'], output: ['text', 'sign', 'audio'],
+    lang: 'hi-IN', fontScale: 1, contrast: 'normal', haptics: true, rate: 1, captions: true
   };
   var prefs = Object.assign({}, DEFAULT_PREFS, store.get('prefs', {}));
 
@@ -20,11 +20,13 @@
   var room = null;
   var msgs = [];
   var peers = {};
+  var paused = false;
+  var ws = null;
   var bc = ('BroadcastChannel' in window) ? new BroadcastChannel('sanket-v1') : null;
 
   /* ---------------- accessibility plumbing ---------------- */
-  function announce(t) { var l = $('#live'); if (l) { l.textContent = ''; setTimeout(function () { l.textContent = t; }, 40); } }
-  function banner(t) { var b = $('#banner'); if (!b) return; if (t) { b.textContent = t; b.classList.remove('hidden'); } else { b.classList.add('hidden'); } }
+  function announce(t) { var l = $('#sr-live'); if (l) { l.textContent = ''; setTimeout(function () { l.textContent = t; }, 40); } }
+  function banner(t) { if (t) announce(t); }
 
   function applyPrefs() {
     var root = document.documentElement;
@@ -37,6 +39,7 @@
     if ($('#chk-sign')) $('#chk-sign').checked = prefs.input.indexOf('sign') > -1;
     if ($('#chk-type')) $('#chk-type').checked = prefs.input.indexOf('text') > -1;
     if ($('#chk-text')) $('#chk-text').checked = prefs.output.indexOf('text') > -1;
+    if ($('#chk-out-sign')) $('#chk-out-sign').checked = prefs.output.indexOf('sign') > -1;
     if ($('#chk-audio')) $('#chk-audio').checked = prefs.output.indexOf('audio') > -1;
     if ($('#rng-font')) { $('#rng-font').value = Math.round((prefs.fontScale || 1) * 100); $('#out-font').value = Math.round((prefs.fontScale || 1) * 100) + '%'; }
     if ($('#rng-rate')) { $('#rng-rate').value = prefs.rate; $('#out-rate').value = Number(prefs.rate).toFixed(1) + '\u00d7'; }
@@ -44,18 +47,24 @@
     if ($('#chk-haptics')) $('#chk-haptics').checked = !!prefs.haptics;
     if ($('#out-chip')) $('#out-chip').textContent = prefs.output.length ? prefs.output.join(' + ') : 'text';
     var LANG_LABELS = { 'hi-IN': 'हिन्दी', 'en-IN': 'English', 'ta-IN': 'தமிழ்', 'te-IN': 'తెలుగు', 'mr-IN': 'मराठी', 'bn-IN': 'বাংলা', 'kn-IN': 'ಕನ್ನಡ', 'gu-IN': 'ગુજરાતી' };
-    if ($('#lang-chip')) $('#lang-chip').textContent = LANG_LABELS[prefs.lang] || prefs.lang;
+    var ltext = LANG_LABELS[prefs.lang] || prefs.lang;
+    if ($('#lang-chip')) $('#lang-chip').textContent = ltext;
+    if ($('#home-lang-chip')) $('#home-lang-chip').textContent = '🇮🇳 ' + ltext;
+    if ($('#guest-name')) $('#guest-name').textContent = prefs.name || 'Guest User';
+    if ($('#guest-avatar')) $('#guest-avatar').textContent = (prefs.name || 'G').slice(0, 1).toUpperCase();
+    if ($('#guest-prefs-summary')) $('#guest-prefs-summary').textContent = (prefs.input.join('+') || 'text') + ' · ' + ltext;
     store.set('prefs', prefs);
   }
 
   function show(id) {
-    var el = $('#screen-' + id);
-    if (!el) return;
-    el.classList.remove('hidden');
-    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    var h = el.querySelector('h1, h2');
+    var target = $('#view-' + id);
+    if (!target) return;
+    $$('.view').forEach(function (v) { v.classList.add('hidden'); });
+    target.classList.remove('hidden');
+    $$('[data-nav]').forEach(function (b) { b.classList.toggle('active', b.getAttribute('data-nav') === id); });
+    var h = target.querySelector('h1, h2');
     if (h) { h.setAttribute('tabindex', '-1'); h.focus({ preventScroll: true }); }
-    if (id === 'lab') labRender();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   /* ---------------- speech output ---------------- */
@@ -197,17 +206,57 @@
       bc.postMessage({ type: 'hello', room: room, me: myCard() });
       bc.postMessage({ type: 'sync-request', room: room, from: ME });
     }
-    $('#room-label').textContent = room;
+    connectSocket(room);
+    if ($('#room-badge')) $('#room-badge').textContent = room;
+    if ($('#side-status-text')) $('#side-status-text').textContent = 'Connected · ' + room;
     render();
     renderPeers();
-    show('session');
-    announce('Joined room ' + room.split('').join(' ') + '. Conversation screen.');
+    announce('Joined room ' + room.split('').join(' ') + '.');
     return true;
   }
 
+  function handleIncoming(d) {
+    if (!d || !room || d.room !== room) return;
+    if (d.type === 'msg' && d.msg && d.msg.from !== ME) {
+      if (pushMessage(d.msg)) { render(); deliver(d.msg); }
+    } else if (d.type === 'hello' && d.me && d.me.id !== ME) {
+      peers[d.me.id] = d.me; renderPeers();
+      relay({ type: 'here', room: room, me: myCard() });
+    } else if (d.type === 'here' && d.me) {
+      peers[d.me.id] = d.me; renderPeers();
+    } else if (d.type === 'bye') {
+      delete peers[d.from]; renderPeers();
+    } else if (d.type === 'sync-request' && d.from !== ME) {
+      relay({ type: 'sync-data', room: room, msgs: msgs.slice(-40) });
+    } else if (d.type === 'sync-data' && Array.isArray(d.msgs)) {
+      var added = false;
+      d.msgs.forEach(function (m) { if (m && m.from !== ME && pushMessage(m)) added = true; });
+      if (added) render();
+    }
+  }
+
+  function relay(payload) {
+    if (bc) bc.postMessage(payload);
+    if (ws && ws.readyState === 1) { try { ws.send(JSON.stringify(payload)); } catch (e) {} }
+  }
+
+  function connectSocket(code) {
+    if (ws) { try { ws.close(); } catch (e) {} ws = null; }
+    if (!/^https?:$/.test(location.protocol) || /github\.io$/i.test(location.hostname)) return;
+    try {
+      var proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+      ws = new WebSocket(proto + '//' + location.host + '/ws/' + encodeURIComponent(code));
+      ws.onopen = function () { relay({ type: 'hello', room: code, me: myCard() }); };
+      ws.onmessage = function (ev) { try { handleIncoming(JSON.parse(ev.data)); } catch (e) {} };
+      ws.onerror = function () {};
+    } catch (e) {}
+  }
+
   function leaveRoom() {
-    if (bc && room) bc.postMessage({ type: 'bye', room: room, from: ME });
+    if (room) relay({ type: 'bye', room: room, from: ME });
+    if (ws) { try { ws.close(); } catch (e) {} ws = null; }
     room = null; msgs = []; peers = {};
+    if ($('#side-status-text')) $('#side-status-text').textContent = 'Ready to Connect';
     show('home');
     announce('Left the room.');
   }
@@ -222,6 +271,7 @@
 
   function send(payload) {
     if (!room) { announce('Join a room first.'); return; }
+    if (paused) { announce('Session is paused. Resume to send.'); return; }
     var m = {
       id: ME + '-' + Date.now() + '-' + Math.random().toString(36).slice(2, 5),
       from: ME, name: prefs.name || 'Guest', lang: prefs.lang,
@@ -231,31 +281,12 @@
     };
     pushMessage(m);
     render();
-    if (bc) bc.postMessage({ type: 'msg', room: room, msg: m });
+    relay({ type: 'msg', room: room, msg: m });
     announce('Message sent.');
   }
 
   if (bc) {
-    bc.onmessage = function (ev) {
-      var d = ev.data || {};
-      if (!room || d.room !== room) return;
-      if (d.type === 'msg' && d.msg && d.msg.from !== ME) {
-        if (pushMessage(d.msg)) { render(); deliver(d.msg); }
-      } else if (d.type === 'hello' && d.me && d.me.id !== ME) {
-        peers[d.me.id] = d.me; renderPeers();
-        bc.postMessage({ type: 'here', room: room, me: myCard() });
-      } else if (d.type === 'here' && d.me) {
-        peers[d.me.id] = d.me; renderPeers();
-      } else if (d.type === 'bye') {
-        delete peers[d.from]; renderPeers();
-      } else if (d.type === 'sync-request' && d.from !== ME) {
-        bc.postMessage({ type: 'sync-data', room: room, msgs: msgs.slice(-40) });
-      } else if (d.type === 'sync-data' && Array.isArray(d.msgs)) {
-        var added = false;
-        d.msgs.forEach(function (m) { if (m && m.from !== ME && pushMessage(m)) added = true; });
-        if (added) render();
-      }
-    };
+    bc.onmessage = function (ev) { handleIncoming(ev.data || {}); };
   }
 
   function deliver(m) {
@@ -359,6 +390,10 @@
 
       box.appendChild(art);
     });
+    if ($('#partner-isl-spotlight') && msgs.length) {
+      var latest = msgs[msgs.length - 1];
+      mountIslPlayer($('#partner-isl-spotlight'), latest.text, true);
+    }
     box.scrollTop = box.scrollHeight;
   }
 
@@ -870,23 +905,61 @@
     announce('Transcript downloaded.');
   }
 
+  /* ---------------- QR Pairing & Nearby Token ---------------- */
+  function renderPairingQr(el, code) {
+    if (!el) return;
+    var size = 156, cells = 11, cell = Math.floor(size / cells), seed = 0;
+    for (var i = 0; i < code.length; i++) seed = (seed * 31 + code.charCodeAt(i)) & 0xfffffff;
+    var svg = ['<svg xmlns="http://www.w3.org/2000/svg" width="' + size + '" height="' + size + '" viewBox="0 0 ' + size + ' ' + size + '">'];
+    svg.push('<rect width="' + size + '" height="' + size + '" fill="#FFFFFF"/>');
+    for (var r = 0; r < cells; r++) {
+      for (var c = 0; c < cells; c++) {
+        var corner = (r < 3 && c < 3) || (r < 3 && c >= cells - 3) || (r >= cells - 3 && c < 3);
+        var border = corner && (r === 0 || r === 2 || r === cells - 1 || r === cells - 3 || c === 0 || c === 2 || c === cells - 1 || c === cells - 3 || (r === 1 && c === 1) || (r === 1 && c === cells - 2) || (r === cells - 2 && c === 1));
+        var bit = ((seed >> ((r * cells + c) % 24)) ^ (r * 7 + c * 13)) & 1;
+        if (border || (!corner && bit)) {
+          svg.push('<rect x="' + (c * cell) + '" y="' + (r * cell) + '" width="' + (cell - 1) + '" height="' + (cell - 1) + '" rx="2" fill="#20233B"/>');
+        }
+      }
+    }
+    svg.push('</svg>');
+    el.innerHTML = svg.join('');
+  }
+
+  var expiryTimer = null;
+  function startNearbyToken(code) {
+    if ($('#nearby-code-display')) $('#nearby-code-display').textContent = code;
+    renderPairingQr($('#nearby-qr'), code);
+    var secs = 300;
+    if (expiryTimer) clearInterval(expiryTimer);
+    expiryTimer = setInterval(function () {
+      secs = Math.max(0, secs - 1);
+      var m = String(Math.floor(secs / 60)).padStart(2, '0'), s = String(secs % 60).padStart(2, '0');
+      if ($('#nearby-expiry')) $('#nearby-expiry').textContent = secs ? ('Temporary token · Expires in ' + m + ':' + s) : 'Token expired — generate a new code';
+      if (!secs) clearInterval(expiryTimer);
+    }, 1000);
+  }
+
   /* ---------------- wiring ---------------- */
   function wire() {
-    $$('[data-go]').forEach(function (b) {
-      b.onclick = function () { show(b.getAttribute('data-go')); };
+    $$('[data-nav]').forEach(function (b) {
+      b.onclick = function (e) {
+        if (b.tagName === 'A') e.preventDefault();
+        show(b.getAttribute('data-nav'));
+      };
     });
 
-    // onboarding
-    $('#rng-font').oninput = function () {
+    // preferences & accessibility
+    if ($('#rng-font')) $('#rng-font').oninput = function () {
       prefs.fontScale = Number(this.value) / 100;
       $('#out-font').value = this.value + '%';
       document.documentElement.style.setProperty('--fs', (16 * prefs.fontScale).toFixed(2) + 'px');
     };
-    $('#rng-rate').oninput = function () {
+    if ($('#rng-rate')) $('#rng-rate').oninput = function () {
       prefs.rate = Number(this.value);
       $('#out-rate').value = Number(this.value).toFixed(1) + '\u00d7';
     };
-    $('#chk-contrast').onchange = function () {
+    if ($('#chk-contrast')) $('#chk-contrast').onchange = function () {
       document.documentElement.setAttribute('data-contrast', this.checked ? 'high' : 'normal');
       prefs.contrast = this.checked ? 'high' : 'normal';
     };
@@ -897,7 +970,7 @@
         announce('Language switched to ' + this.options[this.selectedIndex].text);
       };
     }
-    $('#btn-save-prefs').onclick = function () {
+    if ($('#btn-save-prefs')) $('#btn-save-prefs').onclick = function () {
       prefs.name = $('#f-name').value.trim();
       prefs.lang = $('#sel-lang').value;
       prefs.input = [];
@@ -906,6 +979,7 @@
       if ($('#chk-type').checked) prefs.input.push('text');
       prefs.output = [];
       if ($('#chk-text').checked) prefs.output.push('text');
+      if ($('#chk-out-sign') && $('#chk-out-sign').checked) prefs.output.push('sign');
       if ($('#chk-audio').checked) prefs.output.push('audio');
       prefs.haptics = $('#chk-haptics').checked;
       prefs.fontScale = Number($('#rng-font').value) / 100;
@@ -913,102 +987,141 @@
       if (!prefs.input.length) prefs.input = ['text'];
       if (!prefs.output.length) prefs.output = ['text'];
       applyPrefs();
-      $('#out-chip').textContent = prefs.output.join(' + ');
       show('home');
-      announce('Preferences saved. ' + (prefs.name ? 'Hello ' + prefs.name + '. ' : '') + 'Choose create or join room.');
+      announce('Preferences saved.');
     };
 
-    // home
-    $('#btn-create').onclick = function () {
+    // nearby & home
+    if ($('#btn-home-solo')) $('#btn-home-solo').onclick = function () {
+      joinRoom('SANKET-42');
+      seedDemo();
+      show('session');
+    };
+    if ($('#btn-create')) $('#btn-create').onclick = function () {
       var code = 'SANKET-' + Math.floor(10 + Math.random() * 89);
-      if (joinRoom(code)) $('#room-code').value = code;
+      startNearbyToken(code);
+      if ($('#room-code')) $('#room-code').value = code;
+      if ($('#side-status-text')) $('#side-status-text').textContent = 'Pairing: ' + code;
     };
-    $('#btn-join').onclick = function () {
-      var v = $('#room-code').value.trim();
-      if (!v) { $('#home-msg').textContent = 'Enter a room code first.'; $('#room-code').focus(); return; }
-      if (!joinRoom(v)) $('#home-msg').textContent = 'Could not join that room.';
+    if ($('#btn-enter-created')) $('#btn-enter-created').onclick = function () {
+      var code = ($('#nearby-code-display') && $('#nearby-code-display').textContent) || 'SANKET-42';
+      if (joinRoom(code)) { seedDemo(); show('session'); }
     };
-    $('#btn-solo').onclick = function () { joinRoom('SOLO-' + Math.floor(100 + Math.random() * 900)); };
+    if ($('#join-form')) $('#join-form').onsubmit = function (e) {
+      e.preventDefault();
+      var v = $('#room-code').value.trim().toUpperCase();
+      if (!v) { if ($('#join-err')) $('#join-err').textContent = 'Enter a pairing code first.'; $('#room-code').focus(); return; }
+      if ($('#join-err')) $('#join-err').textContent = '';
+      if ($('#accept-banner')) {
+        $('#accept-text').textContent = 'Ready to connect to session "' + v + '". Both participants must accept.';
+        $('#accept-banner').classList.remove('hidden');
+      } else if (joinRoom(v)) { show('session'); }
+    };
+    if ($('#btn-accept-conn')) $('#btn-accept-conn').onclick = function () {
+      var v = ($('#room-code') && $('#room-code').value.trim().toUpperCase()) || 'SANKET-42';
+      $('#accept-banner').classList.add('hidden');
+      if (joinRoom(v)) { show('session'); announce('Connected to nearby session ' + v); }
+    };
+    if ($('#btn-decline-conn')) $('#btn-decline-conn').onclick = function () {
+      $('#accept-banner').classList.add('hidden');
+      announce('Connection declined.');
+    };
+    if ($('#btn-solo')) $('#btn-solo').onclick = function () {
+      var code = 'SOLO-' + Math.floor(100 + Math.random() * 900);
+      joinRoom(code);
+      seedDemo();
+      show('session');
+    };
 
-    // session
-    $('#btn-copy').onclick = function () {
-      var t = room || '';
-      if (navigator.clipboard) navigator.clipboard.writeText(t).then(function () { announce('Room code copied.'); }, function () {});
-      else announce('Room code is ' + t);
+    // session controls
+    if ($('#btn-leave')) $('#btn-leave').onclick = function () { leaveRoom(); show('home'); };
+    if ($('#btn-export')) $('#btn-export').onclick = exportTranscript;
+    if ($('#btn-toggle-captions')) $('#btn-toggle-captions').onclick = function () {
+      prefs.captions = !prefs.captions;
+      this.textContent = prefs.captions ? 'CC Captions: On' : 'CC Captions: Off';
+      this.setAttribute('aria-pressed', prefs.captions ? 'true' : 'false');
+      if ($('#feed-card')) $('#feed-card').classList.toggle('hidden', !prefs.captions);
     };
-    $('#btn-leave').onclick = leaveRoom;
-    $('#btn-export').onclick = exportTranscript;
-    $('#btn-voicecmd').onclick = voiceCommand;
+    if ($('#btn-pause-session')) $('#btn-pause-session').onclick = function () {
+      paused = !paused;
+      this.textContent = paused ? '▶ Resume' : '⏸ Pause';
+      if ($('#conn-badge')) $('#conn-badge').textContent = paused ? '⏸ Paused' : '● Nearby Session';
+      if (paused && listening) stopListen();
+      announce(paused ? 'Session paused.' : 'Session resumed.');
+    };
 
     // tabs
-    $('#tab-speak').onclick = function () { tab('speak'); };
-    $('#tab-type').onclick = function () { tab('type'); $('#txt-input').focus(); };
-    $('#tab-sign').onclick = function () { tab('sign'); };
+    if ($('#tab-speak')) $('#tab-speak').onclick = function () { tab('speak'); };
+    if ($('#tab-type')) $('#tab-type').onclick = function () { tab('type'); if ($('#txt-input')) $('#txt-input').focus(); };
+    if ($('#tab-sign')) $('#tab-sign').onclick = function () { tab('sign'); };
 
     // speak
-    $('#btn-mic').onclick = function () {
-      if (listening) { stopListen(); return; }
-      startMic();
-    };
-    $('#btn-send-speak').onclick = function () {
+    if ($('#btn-mic')) $('#btn-mic').onclick = function () { if (listening) { stopListen(); return; } startMic(); };
+    if ($('#btn-send-speak')) $('#btn-send-speak').onclick = function () {
       if (!pending || !pending.text) { announce('Nothing to send yet.'); return; }
       send({ text: pending.text, modality: 'speech', confidence: pending.confidence });
       resetSpeak();
       tab('speak');
     };
-    $('#btn-edit-speak').onclick = function () {
-      if (pending && pending.text) $('#txt-input').value = pending.text;
-      tab('type'); $('#txt-input').focus();
+    if ($('#btn-edit-speak')) $('#btn-edit-speak').onclick = function () {
+      if (pending && pending.text && $('#txt-input')) $('#txt-input').value = pending.text;
+      tab('type'); if ($('#txt-input')) $('#txt-input').focus();
     };
-    $('#btn-clear-speak').onclick = resetSpeak;
+    if ($('#btn-clear-speak')) $('#btn-clear-speak').onclick = resetSpeak;
 
     // type
-    $('#btn-send-type').onclick = function () {
+    if ($('#btn-send-type')) $('#btn-send-type').onclick = function () {
       var v = $('#txt-input').value.trim();
       if (!v) { announce('Type a message first.'); $('#txt-input').focus(); return; }
       send({ text: v, modality: 'text', confidence: null });
       $('#txt-input').value = '';
     };
-    $('#btn-speak-type').onclick = function () {
+    if ($('#btn-speak-type')) $('#btn-speak-type').onclick = function () {
       var v = $('#txt-input').value.trim();
       if (v) speak(v, prefs.lang);
     };
 
-    // sign
-    $('#btn-cam').onclick = startCamera;
-    $('#btn-cam-send').onclick = function () {
-      var lab = $('#camLabel');
-      var shape = lab.dataset.shape || '';
-      var stab = lab.dataset.stability || '';
+    // sign camera
+    if ($('#btn-cam')) $('#btn-cam').onclick = startCamera;
+    if ($('#btn-cam-send')) $('#btn-cam-send').onclick = function () {
+      var g = $('#sign-guess');
+      var shape = (g && g.dataset && g.dataset.shape) || (g && g.textContent) || '';
+      var st = $('#sign-stab');
+      var stab = (st && st.dataset && st.dataset.stability) || '80';
       if (!shape) return;
       send({
         text: (prefs.lang === 'hi-IN' ? 'हस्त मुद्रा: ' : 'Handshape: ') + shape + ' (' + stab + '%)',
-        modality: 'sign-heuristic', confidence: stab ? Number(stab) / 100 : null
+        modality: 'sign-heuristic', confidence: Number(stab) / 100
       });
     };
 
-    // lab
-    $('#lab-lang').onchange = function () { labIdx = 0; labResults = []; labRender(); };
-    $('#btn-lab-record').onclick = labRecord;
-    $('#btn-lab-next').onclick = function () { var l = $('#lab-lang').value; labIdx = (labIdx + 1) % LAB[l].length; labRender(); };
-    $('#btn-lab-reset').onclick = function () { labResults = []; labIdx = 0; $('#lab-status').textContent = ''; labRender(); };
+    // accuracy lab
+    if ($('#btn-lab-calc')) $('#btn-lab-calc').onclick = function () {
+      var ref = ($('#lab-ref') && $('#lab-ref').value) || '';
+      var hyp = ($('#lab-hyp') && $('#lab-hyp').value) || '';
+      var w = words(ref).length;
+      var d = lev(words(ref), words(hyp));
+      var wer = w ? (d / w) * 100 : 0;
+      var acc = accuracy(ref, hyp);
+      if ($('#lab-result')) {
+        $('#lab-result').textContent = 'WER: ' + wer.toFixed(1) + '% · Accuracy: ' + acc + '%';
+        $('#lab-result').className = 'chip ' + (acc >= 85 ? 'ok' : (acc >= 60 ? 'warn' : 'bad'));
+      }
+    };
 
-    // keyboard shortcut: alt+s send, alt+m mic
     document.addEventListener('keydown', function (e) {
       if (!e.altKey) return;
-      if (e.key === 'm' && room) { e.preventDefault(); $('#btn-mic').click(); }
-      if (e.key === 's' && room) { e.preventDefault(); $('#btn-send-speak').click(); }
+      if (e.key === 'm' && room && $('#btn-mic')) { e.preventDefault(); $('#btn-mic').click(); }
+      if (e.key === 's' && room && $('#btn-send-speak')) { e.preventDefault(); $('#btn-send-speak').click(); }
     });
   }
-
 
   function seedDemo() {
     if (msgs.length) return;
     var now = Date.now();
     var demo = [
       { id: 'demo1', from: 'guest-asha', name: 'Asha', lang: 'hi-IN', text: '\u0928\u092e\u0938\u094d\u0924\u0947, \u092e\u0941\u091d\u0947 \u0921\u0949\u0915\u094d\u091f\u0930 \u0915\u0947 \u092a\u093e\u0938 \u091c\u093e\u0928\u093e \u0939\u0948', modality: 'speech', confidence: 0.94, ts: now - 240000 },
-      { id: 'demo2', from: ME, name: prefs.name || 'Guest', lang: prefs.lang, text: prefs.lang === 'hi-IN' ? '\u092e\u0926\u0926' : 'Help', modality: 'sign-card', gloss: 'madad', confidence: null, ts: now - 120000 },
-      { id: 'demo3', from: 'guest-asha', name: 'Asha', lang: 'hi-IN', text: '\u0905\u0938\u094d\u092a\u0924\u093e\u0932 \u0915\u0939\u093e\u0901 \u0939\u0948', modality: 'speech', confidence: 0.61, ts: now - 60000 }
+      { id: 'demo2', from: ME, name: prefs.name || 'Guest', lang: prefs.lang, text: prefs.lang === 'hi-IN' ? '\u092e\u0926\u0926' : 'Help', modality: 'sign-card', gloss: 'madad', confidence: null, ts: now - 120000 }
     ];
     demo.forEach(function (m) { msgs.push(m); });
     store.set('room.' + room, msgs);
@@ -1019,24 +1132,11 @@
     applyPrefs();
     buildGloss();
     wire();
-    $('#out-chip').textContent = prefs.output.join(' + ');
-    $('#txt-input').placeholder = prefs.lang === 'hi-IN' ? 'हिन्दी या English में लिखें…' : 'Type in English or हिन्दी…';
-
+    startNearbyToken('SANKET-42');
     joinRoom('SANKET-42');
     seedDemo();
-    labRender();
-
-    if (!micSupported()) {
-      banner('No speech recognition in this browser — Type mode and the accuracy lab need Chrome/Edge. Speech output still works.');
-    } else if (location.protocol === 'file:') {
-      banner('Opened as a local file: microphone access is blocked by browsers. Serve it over https or localhost to use speech input.');
-    }
-    
-    var hash = (location.hash || '').replace('#', '').toLowerCase();
-    if (hash === 'session' || hash === 'lab' || hash === 'about' || hash === 'home' || hash === 'onboard') {
-      show(hash);
-    }
-    announce('Sanket ready. Voice-first multimodal accessibility platform.');
+    show('home');
+    announce('Sanket ready. Choose Connect Nearby or Live Conversation.');
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
