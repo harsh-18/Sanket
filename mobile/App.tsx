@@ -91,7 +91,7 @@ export default function App() {
       wsRef.current?.close();
       const wsBase = serverUrl.replace(/^http/, 'ws');
       const ws = new WebSocket(`${wsBase}/ws/${encodeURIComponent(code)}`);
-      ws.onmessage = (ev) => {
+      ws.onmessage = (ev: { data: string }) => {
         try {
           const data = JSON.parse(ev.data);
           if (data?.type === 'msg' && data.msg) {

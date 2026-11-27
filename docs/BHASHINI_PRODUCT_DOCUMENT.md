@@ -4,6 +4,8 @@
 **Product Name:** Project Sanket  
 **Tagline:** *Different ways to communicate. One shared conversation.*  
 **Version:** 1.0 (Prototype / Hackathon Build)  
+**Live Deployed Product:** https://harsh-18.github.io/Sanket/  
+**GitHub Release:** https://github.com/harsh-18/Sanket/releases/tag/v1.0.0-alpha  
 **Repository:** `https://github.com/harsh-18/Sanket`  
 **Category:** Assistive Technology / Public Digital Accessibility / Multilingual Communication
 
@@ -44,20 +46,20 @@ Browser-native speech APIs (`Web Speech API` / `SpeechSynthesis`) have limited s
 
 ```text
 +-------------------------------------------------------------------+
-|                     Sanket Client (Web / PWA)                     |
-|  - Accessible Onboarding & Preference Engine (WCAG 2.2 AAA)       |
-|  - MediaPipe Handshape Landmark Camera (on-device WASM)           |
-|  - 12 Validated ISL Gloss Cards & Phrasebook                      |
-|  - Room Sync (BroadcastChannel in prototype; Realtime in prod)    |
+|          Sanket Clients (Web PWA + Expo Android & iOS)            |
+|  - Light-First Accessible UI (#F8F9FF / #6655D9, WCAG 2.2 AA/AAA) |
+|  - Connect Nearby: QR Code & Expiring Pairing Token + Mutual Accept|
+|  - MediaPipe Handshape Camera + 12 Validated ISL Gloss Cards      |
+|  - Real-Time ISL Visualiser (35 ISLVT A-Z/1-9 + 40 Hindi ISL imgs)|
 +---------------------------------+---------------------------------+
                                   |
          +------------------------+------------------------+
-         | (When BHASHINI Key Configured)                  | (Offline / No-Key Fallback)
+         | (FastAPI Gateway: /api/bhashini/translate)      | (Zero-Key Local Fallback)
          v                                                 v
 +-----------------------------------------+   +-----------------------------+
 |         BHASHINI ULCA API Pipeline      |   |   Local Browser Fallback    |
 |  1. ASR  (Speech -> Transcript)         |   |  - Web Speech API (STT/TTS) |
-|  2. NMT  (Source Lang -> Target Lang)   |   |  - 24-Pair Local Phrasebook |
+|  2. NMT  (Hindi <-> English & Regional) |   |  - 24-Pair Local Phrasebook |
 |  3. TTS  (Translated Text -> Audio)     |   |  - On-Device Hand Landmarks |
 +-----------------------------------------+   +-----------------------------+
 ```

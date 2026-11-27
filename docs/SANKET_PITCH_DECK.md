@@ -64,8 +64,7 @@ Sanket decouples **how you send** from **how the other person receives** inside 
 
 ## 5. Code & Architecture Documentation
 
-- **`src/index.html` (1,050 lines):** Complete single-page responsive UI with WCAG 2.2 AAA high-contrast mode, onboarding preference selectors, shared conversation room, 12 ISL gloss cards, MediaPipe camera HUD, and Accuracy Lab.
-- **`src/app.js` (892 lines):** Client-side application engine handling preference persistence, `BroadcastChannel` room sync, Web Speech API STT/TTS, Hindi/English voice commands, 24-pair phrasebook translation, MediaPipe hand-landmark classification, Levenshtein WER benchmarking, and `.txt` transcript export.
-- **`Dockerfile` & `docker-compose.yml`:** One-command containerized deployment (`docker compose up --build`) serving the app on `http://localhost:8080` with zero required secret keys.
-- **`.github/workflows/pages.yml`:** Automated GitHub Pages deployment pipeline.
-- **`docs/`:** `PLAN_OF_ACTION.md`, `DESIGN_SYSTEM_AND_INSPIRATION.md`, `BHASHINI_PRODUCT_DOCUMENT.md`, and this pitch deck.
+- **`src/index.html` & `src/app.js`:** Light-first (`#F8F9FF` / `#6655D9`) accessible Web App with Connect Nearby QR/code pairing, split two-way Live Conversation workspace, Hindi & English speech input/TTS, MediaPipe handshape camera, and real-time ISL Visualiser powered by **ISLVT** (`doi:10.17632/98mzk82wbb.1`, 35 classes) and **Indian Sign Language - Hindi** (Krish Bhagat, Kaggle, 40 Devanagari classes).
+- **`backend/main.py` & `backend/test_main.py`:** FastAPI server providing temporary Nearby rooms, cross-device WebSocket relay (`/ws/{room}`), and a zero-key BHASHINI ULCA proxy (`/api/bhashini/translate` returning `"key_not_set"` fallback when env vars are unset).
+- **`mobile/` & `packages/shared/`:** Dedicated Android (Material 3) & iOS (Safe Area / VoiceOver) Expo React Native apps sharing TypeScript design tokens, communication contracts, and ISL lexicon.
+- **`Dockerfile` & `docker-compose.yml`:** One-command startup (`docker compose up --build`) serving the full app on `http://localhost:8080` with zero secret keys required.
