@@ -227,9 +227,10 @@
       background:var(--surface);border:1px solid var(--border);
     }
     .isl-glyph-box{
-      width:68px;height:68px;border-radius:14px;flex-shrink:0;display:grid;place-items:center;position:relative;
-      background:var(--lavender);font-size:2rem;border:1px solid #D8D2FA;
+      width:76px;height:76px;border-radius:14px;flex-shrink:0;display:grid;place-items:center;position:relative;
+      background:var(--lavender);border:1px solid #D8D2FA;padding:4px;
     }
+    .isl-glyph-box svg{width:100%;height:100%;display:block}
     .isl-motion-tag{
       position:absolute;bottom:-6px;right:-6px;font-family:'JetBrains Mono',monospace;font-size:.64rem;font-weight:700;
       padding:.14rem .42rem;border-radius:999px;background:var(--primary);color:#fff;
@@ -314,7 +315,6 @@
         <button class="nav-item" data-nav="session" type="button">💬 Live Conversation</button>
         <button class="nav-item" data-nav="calls" type="button">📹 Sanket Calls <span class="chip" style="margin-left:auto;font-size:.66rem">Soon</span></button>
         <button class="nav-item" data-nav="prefs" type="button">🎛️ Preferences &amp; Access</button>
-        <button class="nav-item" data-nav="lab" type="button">📊 Accuracy Lab</button>
       </nav>
 
       <div class="sidebar-foot">
