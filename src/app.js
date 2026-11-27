@@ -32,6 +32,7 @@
     root.setAttribute('data-contrast', prefs.contrast === 'high' ? 'high' : 'normal');
     if ($('#f-name')) $('#f-name').value = prefs.name || '';
     if ($('#sel-lang')) $('#sel-lang').value = prefs.lang;
+    if ($('#studio-lang')) $('#studio-lang').value = prefs.lang;
     if ($('#chk-speak')) $('#chk-speak').checked = prefs.input.indexOf('speech') > -1;
     if ($('#chk-sign')) $('#chk-sign').checked = prefs.input.indexOf('sign') > -1;
     if ($('#chk-type')) $('#chk-type').checked = prefs.input.indexOf('text') > -1;
@@ -42,7 +43,8 @@
     if ($('#chk-contrast')) $('#chk-contrast').checked = prefs.contrast === 'high';
     if ($('#chk-haptics')) $('#chk-haptics').checked = !!prefs.haptics;
     if ($('#out-chip')) $('#out-chip').textContent = prefs.output.length ? prefs.output.join(' + ') : 'text';
-    if ($('#lang-chip')) $('#lang-chip').textContent = prefs.lang === 'hi-IN' ? 'हिन्दी' : 'English';
+    var LANG_LABELS = { 'hi-IN': 'हिन्दी', 'en-IN': 'English', 'ta-IN': 'தமிழ்', 'te-IN': 'తెలుగు', 'mr-IN': 'मराठी', 'bn-IN': 'বাংলা', 'kn-IN': 'ಕನ್ನಡ', 'gu-IN': 'ગુજરાતી' };
+    if ($('#lang-chip')) $('#lang-chip').textContent = LANG_LABELS[prefs.lang] || prefs.lang;
     store.set('prefs', prefs);
   }
 
@@ -422,32 +424,32 @@
     });
   }
 
-  /* ---------------- Text -> ISL Glossifier & Skeletal Player ---------------- */
+  /* ---------------- Text -> ISL Glossifier & Visual Sign Card Player ---------------- */
   var ISL_STOP = {
     is: 1, am: 1, are: 1, was: 1, were: 1, the: 1, a: 1, an: 1, to: 1, for: 1, of: 1, in: 1, on: 1, at: 1,
     i: 1, me: 1, my: 1, हूँ: 1, हूं: 1, है: 1, हैं: 1, था: 1, थी: 1, को: 1, का: 1, की: 1, के: 1, में: 1, से: 1, पर: 1
   };
 
   var ISL_SIGNS = {
-    HELLO:      { words: ['hello','hi','namaste','नमस्ते','नमस्कार'], desc: 'Palms joined at chest / wave', lx:.44, ly:.64, rx:.56, ry:.64, dl:[0,-.05], dr:[0,-.05], fl:1, fr:1 },
-    YES:        { words: ['yes','haan','ok','okay','हाँ','हां','ठीक'], desc: 'Fist nodding forward', lx:.30, ly:.82, rx:.60, ry:.52, dl:[0,0], dr:[0,.10], fl:0, fr:0 },
-    NO:         { words: ['no','not','nahi','nahin','नहीं','ना'], desc: 'Index finger side-to-side', lx:.30, ly:.82, rx:.62, ry:.48, dl:[0,0], dr:[.10,0], fl:0, fr:.3 },
-    THANK_YOU:  { words: ['thanks','thank','thankyou','dhanyavad','dhanyavaad','शुक्रिया','धन्यवाद'], desc: 'Fingertips from chin outward', lx:.30, ly:.82, rx:.52, ry:.38, dl:[0,0], dr:[.12,.10], fl:0, fr:1 },
-    PLEASE:     { words: ['please','kripya','कृपया'], desc: 'Flat palm circling on chest', lx:.30, ly:.82, rx:.50, ry:.64, dl:[0,0], dr:[.07,.05], fl:0, fr:1 },
-    HELP:       { words: ['help','madad','बचाओ','मदद','सहायता'], desc: 'Fist on flat palm, lifted together', lx:.46, ly:.68, rx:.52, ry:.62, dl:[0,-.10], dr:[0,-.10], fl:1, fr:0 },
-    WATER:      { words: ['water','paani','pani','पानी','जल'], desc: 'W-handshape tapped near lips', lx:.30, ly:.82, rx:.55, ry:.36, dl:[0,0], dr:[0,.05], fl:0, fr:.6 },
-    DOCTOR:     { words: ['doctor','hospital','clinic','डॉक्टर','अस्पताल'], desc: 'Two fingers tapping wrist pulse', lx:.44, ly:.68, rx:.49, ry:.64, dl:[0,0], dr:[0,-.04], fl:1, fr:.5 },
-    UNDERSTOOD: { words: ['understood','understand','samajh','समझ'], desc: 'Index from temple forward', lx:.30, ly:.82, rx:.62, ry:.26, dl:[0,0], dr:[.10,.06], fl:0, fr:.3 },
-    GOODBYE:    { words: ['bye','goodbye','again','phir','फिर','अलविदा'], desc: 'Open hand closing while moving out', lx:.30, ly:.82, rx:.68, ry:.44, dl:[0,0], dr:[.10,-.04], fl:0, fr:1 },
-    SORRY:      { words: ['sorry','maaf','maafi','माफ़','माफ'], desc: 'Fist circling on chest', lx:.30, ly:.82, rx:.50, ry:.62, dl:[0,0], dr:[.06,.06], fl:0, fr:0 },
-    ATTENTION:  { words: ['attention','listen','dhyan','ध्यान','सुनो'], desc: 'Both hands framing face', lx:.36, ly:.34, rx:.64, ry:.34, dl:[0,-.04], dr:[0,-.04], fl:1, fr:1 },
-    WAIT:       { words: ['wait','ruko','minute','minutes','रुको','मिनट'], desc: 'Both palms held forward, slight pulse', lx:.34, ly:.58, rx:.66, ry:.58, dl:[0,.04], dr:[0,.04], fl:1, fr:1 },
-    WHERE:      { words: ['where','kahan','कहाँ','कहां'], desc: 'Palms up, side-to-side question', lx:.32, ly:.62, rx:.68, ry:.62, dl:[-.06,0], dr:[.06,0], fl:1, fr:1 },
-    COME:       { words: ['come','aao','aaiye','आओ','आइए'], desc: 'Beckoning hand inward toward chest', lx:.30, ly:.82, rx:.68, ry:.54, dl:[0,0], dr:[-.14,.04], fl:0, fr:.8 },
-    GATE:       { words: ['gate','door','outside','bahar','गेट','दरवाजा','बाहर'], desc: 'Hands swinging open like a gate', lx:.42, ly:.60, rx:.58, ry:.60, dl:[-.08,0], dr:[.08,0], fl:1, fr:1 },
-    DELIVERY:   { words: ['delivery','order','parcel','package','zomato','swiggy','डिलीवरी','ऑर्डर'], desc: 'Hands holding & handing box forward', lx:.40, ly:.66, rx:.60, ry:.66, dl:[0,-.07], dr:[0,-.07], fl:.8, fr:.8 },
-    NEED:       { words: ['need','want','chahiye','चाहिए','ज़रूरत'], desc: 'Bent hand pulled down toward body', lx:.30, ly:.82, rx:.54, ry:.56, dl:[0,0], dr:[-.04,.10], fl:0, fr:.5 },
-    GOOD:       { words: ['good','great','accha','अच्छा','बढ़िया'], desc: 'Thumbs-up / chin-to-palm outward', lx:.30, ly:.82, rx:.58, ry:.48, dl:[0,0], dr:[.08,-.06], fl:0, fr:.3 }
+    HELLO:      { words: ['hello','hi','namaste','नमस्ते','नमस्कार'], icon: '🙏', hi: 'नमस्ते', desc: 'Join both palms at chest & bow slightly', anim: 'anim-nod', dir: '↕ BOW' },
+    YES:        { words: ['yes','haan','ok','okay','हाँ','हां','ठीक'], icon: '👍', hi: 'हाँ', desc: 'Closed fist nodding forward twice', anim: 'anim-nod', dir: '↓ NOD' },
+    NO:         { words: ['no','not','nahi','nahin','नहीं','ना'], icon: '☝️', hi: 'नहीं', desc: 'Index finger sweeping side-to-side', anim: 'anim-shake', dir: '⇄ SHAKE' },
+    THANK_YOU:  { words: ['thanks','thank','thankyou','dhanyavad','dhanyavaad','शुक्रिया','धन्यवाद'], icon: '🤲', hi: 'धन्यवाद', desc: 'Fingertips from chin moving outward', anim: 'anim-out', dir: '→ OUT' },
+    PLEASE:     { words: ['please','kripya','कृपया'], icon: '🫶', hi: 'कृपया', desc: 'Flat palm circling gently on chest', anim: 'anim-circle', dir: '↻ CIRCLE' },
+    HELP:       { words: ['help','madad','बचाओ','मदद','सहायता'], icon: '🆘', hi: 'मदद', desc: 'Fist resting on flat palm, lifted together', anim: 'anim-lift', dir: '↑ LIFT' },
+    WATER:      { words: ['water','paani','pani','पानी','जल'], icon: '💧', hi: 'पानी', desc: 'W-handshape tapped near lips twice', anim: 'anim-nod', dir: '👄 LIPS' },
+    DOCTOR:     { words: ['doctor','hospital','clinic','डॉक्टर','अस्पताल'], icon: '🩺', hi: 'डॉक्टर', desc: 'Two fingers tapping wrist pulse', anim: 'anim-pulse', dir: '💓 PULSE' },
+    UNDERSTOOD: { words: ['understood','understand','samajh','समझ'], icon: '💡', hi: 'समझ गया', desc: 'Index finger moving forward from temple', anim: 'anim-out', dir: '→ TEMPLE' },
+    GOODBYE:    { words: ['bye','goodbye','again','phir','फिर','अलविदा'], icon: '👋', hi: 'फिर मिलेंगे', desc: 'Open hand waving outward while closing', anim: 'anim-shake', dir: '👋 WAVE' },
+    SORRY:      { words: ['sorry','maaf','maafi','माफ़','माफ'], icon: '✊', hi: 'माफ़ कीजिए', desc: 'Closed fist circling on chest', anim: 'anim-circle', dir: '↻ CHEST' },
+    ATTENTION:  { words: ['attention','listen','dhyan','ध्यान','सुनो'], icon: '👀', hi: 'ध्यान दीजिए', desc: 'Both flat hands framing sides of face', anim: 'anim-pulse', dir: '👀 FOCUS' },
+    WAIT:       { words: ['wait','ruko','minute','minutes','रुको','मिनट'], icon: '✋', hi: 'रुको', desc: 'Open palm held steady facing forward', anim: 'anim-pulse', dir: '✋ HOLD' },
+    WHERE:      { words: ['where','kahan','कहाँ','कहां'], icon: '❓', hi: 'कहाँ', desc: 'Both palms upturned, side-to-side question', anim: 'anim-shake', dir: '⇄ ASK' },
+    COME:       { words: ['come','aao','aaiye','आओ','आइए'], icon: '🫳', hi: 'आइए', desc: 'Open hand beckoning inward toward chest', anim: 'anim-in', dir: '← IN' },
+    GATE:       { words: ['gate','door','outside','bahar','गेट','दरवाजा','बाहर'], icon: '🚪', hi: 'गेट / बाहर', desc: 'Both hands swinging open like doors', anim: 'anim-out', dir: '↔ OPEN' },
+    DELIVERY:   { words: ['delivery','order','parcel','package','zomato','swiggy','डिलीवरी','ऑर्डर'], icon: '📦', hi: 'डिलीवरी', desc: 'Both hands holding & handing parcel forward', anim: 'anim-out', dir: '→ HAND' },
+    NEED:       { words: ['need','want','chahiye','चाहिए','ज़रूरत'], icon: '🫴', hi: 'चाहिए', desc: 'Curved palm pulled downward toward body', anim: 'anim-in', dir: '↓ PULL' },
+    GOOD:       { words: ['good','great','accha','अच्छा','बढ़िया'], icon: '👌', hi: 'अच्छा', desc: 'Thumb & index circle / chin-to-palm out', anim: 'anim-out', dir: '✓ GOOD' }
   };
 
   var WORD_TO_GLOSS = {};
@@ -457,63 +459,30 @@
 
   function textToIslSequence(text) {
     var clean = String(text || '').toLowerCase().replace(/[?!.,।:;'"()]/g, ' ').trim();
-    if (!clean) return [{ gloss: 'HELLO', desc: ISL_SIGNS.HELLO.desc, pose: ISL_SIGNS.HELLO }];
+    if (!clean) return [{ gloss: 'HELLO', icon: '🙏', hi: 'नमस्ते', desc: ISL_SIGNS.HELLO.desc, anim: 'anim-nod', dir: '↕ BOW' }];
     var raw = clean.split(/\s+/), seq = [];
     raw.forEach(function (tok) {
       if (!tok || ISL_STOP[tok]) return;
       var g = WORD_TO_GLOSS[tok];
       if (g) {
-        seq.push({ gloss: g, desc: ISL_SIGNS[g].desc, pose: ISL_SIGNS[g] });
+        var s = ISL_SIGNS[g];
+        seq.push({ gloss: g, icon: s.icon, hi: s.hi, desc: s.desc, anim: s.anim, dir: s.dir });
       } else {
         var chars = tok.replace(/[^a-z0-9]/g, '').slice(0, 6).toUpperCase().split('');
         if (chars.length) {
-          chars.forEach(function (ch, idx) {
+          chars.forEach(function (ch) {
             seq.push({
-              gloss: 'FS:' + ch,
-              desc: 'Fingerspell "' + ch + '"',
-              pose: { lx: .30, ly: .82, rx: .58 + (idx % 2) * .04, ry: .44, dl: [0, 0], dr: [.03, -.03], fl: 0, fr: ((ch.charCodeAt(0) % 4) + 1) / 4 }
+              gloss: ch, icon: '🤟', hi: 'अक्षर ' + ch,
+              desc: 'ISL Fingerspelling letter "' + ch + '"', anim: 'anim-pulse', dir: 'FS:' + ch
             });
           });
         } else {
-          seq.push({ gloss: tok.slice(0, 10).toUpperCase(), desc: 'Concept: ' + tok, pose: ISL_SIGNS.ATTENTION });
+          seq.push({ gloss: tok.slice(0, 10).toUpperCase(), icon: '💬', hi: tok, desc: 'Visual word card: ' + tok, anim: 'anim-pulse', dir: 'WORD' });
         }
       }
     });
-    if (!seq.length) seq.push({ gloss: 'HELLO', desc: ISL_SIGNS.HELLO.desc, pose: ISL_SIGNS.HELLO });
+    if (!seq.length) seq.push({ gloss: 'HELLO', icon: '🙏', hi: 'नमस्ते', desc: ISL_SIGNS.HELLO.desc, anim: 'anim-nod', dir: '↕ BOW' });
     return seq.slice(0, 10);
-  }
-
-  function drawHandRig(ctx, wx, wy, spread, W, H, accent) {
-    var fingers = [-0.36, -0.18, 0, 0.18, 0.36];
-    var len = (10 + spread * 10);
-    ctx.strokeStyle = accent; ctx.lineWidth = 2;
-    fingers.forEach(function (ang, i) {
-      var flen = i === 0 ? len * 0.72 : len * (spread < 0.2 ? 0.35 : 1);
-      var tx = wx * W + Math.sin(ang) * flen;
-      var ty = wy * H - Math.cos(ang) * flen;
-      ctx.beginPath(); ctx.moveTo(wx * W, wy * H); ctx.lineTo(tx, ty); ctx.stroke();
-      ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(tx, ty, 2.2, 0, Math.PI * 2); ctx.fill();
-    });
-    ctx.fillStyle = accent; ctx.beginPath(); ctx.arc(wx * W, wy * H, 4.2, 0, Math.PI * 2); ctx.fill();
-  }
-
-  function drawSignerFrame(ctx, W, H, pose, phase) {
-    ctx.clearRect(0, 0, W, H);
-    var pulse = Math.sin(phase * Math.PI);
-    var lx = pose.lx + pose.dl[0] * pulse, ly = pose.ly + pose.dl[1] * pulse;
-    var rx = pose.rx + pose.dr[0] * pulse, ry = pose.ry + pose.dr[1] * pulse;
-
-    ctx.strokeStyle = 'rgba(148,163,184,0.55)'; ctx.lineWidth = 2.4;
-    ctx.beginPath(); ctx.arc(W * 0.5, H * 0.24, 13, 0, Math.PI * 2); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(W * 0.34, H * 0.48); ctx.lineTo(W * 0.66, H * 0.48); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(W * 0.5, H * 0.37); ctx.lineTo(W * 0.5, H * 0.48); ctx.stroke();
-
-    ctx.strokeStyle = 'rgba(129,140,248,0.85)'; ctx.lineWidth = 3;
-    ctx.beginPath(); ctx.moveTo(W * 0.34, H * 0.48); ctx.lineTo(W * 0.28, H * 0.72); ctx.lineTo(lx * W, ly * H); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(W * 0.66, H * 0.48); ctx.lineTo(W * 0.74, H * 0.72); ctx.lineTo(rx * W, ry * H); ctx.stroke();
-
-    drawHandRig(ctx, lx, ly, pose.fl, W, H, '#38bdf8');
-    drawHandRig(ctx, rx, ry, pose.fr, W, H, '#d8b4fe');
   }
 
   function mountIslPlayer(host, text, autoPlay) {
@@ -521,49 +490,67 @@
     host.textContent = '';
     var seq = textToIslSequence(text);
     var wrap = document.createElement('div'); wrap.className = 'isl-player';
-    var canvas = document.createElement('canvas'); canvas.className = 'isl-canvas'; canvas.width = 168; canvas.height = 124;
-    var info = document.createElement('div'); info.className = 'isl-info';
-    var pills = document.createElement('div'); pills.className = 'isl-seq';
+
+    var stage = document.createElement('div'); stage.className = 'isl-stage';
+    var gbox = document.createElement('div'); gbox.className = 'isl-glyph-box';
+    var emoji = document.createElement('span'); emoji.className = 'isl-emoji';
+    var mtag = document.createElement('span'); mtag.className = 'isl-motion-tag';
+    gbox.appendChild(emoji); gbox.appendChild(mtag);
+
+    var details = document.createElement('div'); details.style.minWidth = '0';
+    var title = document.createElement('div'); title.className = 'isl-word-title';
     var cap = document.createElement('div'); cap.className = 'isl-caption';
-    var row = document.createElement('div'); row.style.display = 'flex'; row.style.gap = '.5rem'; row.style.alignItems = 'center'; row.style.flexWrap = 'wrap';
-    var replay = document.createElement('button'); replay.type = 'button'; replay.className = 'btn sm ghost'; replay.textContent = '↻ Replay ISL';
-    var attr = document.createElement('span'); attr.className = 'isl-attr'; attr.textContent = 'Gloss skeleton · ISLRTC / AI4Bharat INCLUDE';
+    details.appendChild(title); details.appendChild(cap);
+    stage.appendChild(gbox); stage.appendChild(details);
+
+    var strip = document.createElement('div'); strip.className = 'isl-seq';
+    var row = document.createElement('div');
+    row.style.display = 'flex'; row.style.gap = '.5rem'; row.style.alignItems = 'center'; row.style.flexWrap = 'wrap';
+    var replay = document.createElement('button'); replay.type = 'button'; replay.className = 'btn sm ghost'; replay.textContent = '↻ Replay Signs';
+    var attr = document.createElement('span'); attr.className = 'isl-attr'; attr.textContent = 'ISL Sign Cards · ISLRTC / AI4Bharat INCLUDE';
     row.appendChild(replay); row.appendChild(attr);
 
-    var pillEls = seq.map(function (item) {
-      var s = document.createElement('span'); s.className = 'isl-pill'; s.textContent = item.gloss;
-      pills.appendChild(s); return s;
+    var timerId = null;
+    function showIndex(idx) {
+      var item = seq[idx];
+      gbox.className = 'isl-glyph-box ' + item.anim;
+      emoji.textContent = item.icon;
+      mtag.textContent = item.dir;
+      title.textContent = item.gloss + ' · ' + item.hi;
+      cap.textContent = item.desc;
+      cardEls.forEach(function (el, i) { el.classList.toggle('active', i === idx); });
+    }
+
+    var cardEls = seq.map(function (item, idx) {
+      var b = document.createElement('button');
+      b.type = 'button'; b.className = 'isl-card-mini';
+      b.textContent = item.icon + ' ' + item.gloss;
+      b.onclick = function () {
+        if (timerId) clearInterval(timerId);
+        showIndex(idx);
+      };
+      strip.appendChild(b);
+      return b;
     });
-    info.appendChild(pills); info.appendChild(cap); info.appendChild(row);
-    wrap.appendChild(canvas); wrap.appendChild(info);
+
+    wrap.appendChild(stage); wrap.appendChild(strip); wrap.appendChild(row);
     host.appendChild(wrap);
 
-    var ctx = canvas.getContext('2d');
-    var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    var rafId = null;
-
     function run() {
-      if (rafId) cancelAnimationFrame(rafId);
-      var start = performance.now(), stepMs = 1150;
-      function frame(now) {
-        var elapsed = now - start;
-        var idx = Math.min(seq.length - 1, Math.floor(elapsed / stepMs));
-        var phase = reduced ? 0.5 : (elapsed % stepMs) / stepMs;
-        pillEls.forEach(function (el, i) { el.classList.toggle('active', i === idx); });
-        cap.textContent = seq[idx].gloss + ' — ' + seq[idx].desc;
-        drawSignerFrame(ctx, canvas.width, canvas.height, seq[idx].pose, phase);
-        if (elapsed < seq.length * stepMs) rafId = requestAnimationFrame(frame);
-      }
-      rafId = requestAnimationFrame(frame);
+      if (timerId) clearInterval(timerId);
+      var i = 0;
+      showIndex(0);
+      if (seq.length <= 1) return;
+      timerId = setInterval(function () {
+        i += 1;
+        if (i >= seq.length) { clearInterval(timerId); timerId = null; return; }
+        showIndex(i);
+      }, 1300);
     }
 
     replay.onclick = run;
     if (autoPlay) run();
-    else {
-      pillEls[0].classList.add('active');
-      cap.textContent = seq[0].gloss + ' — ' + seq[0].desc;
-      drawSignerFrame(ctx, canvas.width, canvas.height, seq[0].pose, 0.5);
-    }
+    else showIndex(0);
   }
 
   /* ---------------- speak composer ---------------- */
@@ -903,6 +890,13 @@
       document.documentElement.setAttribute('data-contrast', this.checked ? 'high' : 'normal');
       prefs.contrast = this.checked ? 'high' : 'normal';
     };
+    if ($('#studio-lang')) {
+      $('#studio-lang').onchange = function () {
+        prefs.lang = this.value;
+        applyPrefs();
+        announce('Language switched to ' + this.options[this.selectedIndex].text);
+      };
+    }
     $('#btn-save-prefs').onclick = function () {
       prefs.name = $('#f-name').value.trim();
       prefs.lang = $('#sel-lang').value;
