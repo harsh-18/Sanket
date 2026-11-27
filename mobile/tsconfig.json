@@ -11,9 +11,8 @@
     "skipLibCheck": true,
     "resolveJsonModule": true,
     "noEmit": true,
-    "baseUrl": ".",
     "paths": {
-      "@sanket/shared": ["../packages/shared/index.ts"]
+      "@sanket/shared": ["./../packages/shared/index.ts"]
     }
   },
   "include": ["App.tsx", "index.ts", "src/**/*", "../packages/shared/**/*"]
