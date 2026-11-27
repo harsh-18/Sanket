@@ -633,13 +633,15 @@
         var s = ISL_SIGNS[g];
         seq.push({ gloss: g, icon: s.icon, hi: s.hi, desc: s.desc, anim: s.anim, dir: s.dir, badge: s.icon, shape: 'word' });
       } else if (/[\u0900-\u097F]/.test(tok)) {
-        var akshars = tok.match(/[\u0900-\u097F][\u093E-\u094D\u0902\u0903]?/g) || [tok];
-        akshars.slice(0, 5).forEach(function (ak) {
-          var base = ak.charAt(0);
-          var hint = HINDI_AKSHAR[base] || ('Devanagari akshar "' + ak + '" phonetic handshape');
+        var akshars = tok.match(/(क्ष|ज्ञ|[\u0900-\u097F][\u093E-\u094D\u0902\u0903]?)/g) || [tok];
+        akshars.slice(0, 6).forEach(function (ak) {
+          var keyChar = (ak.indexOf('क्ष') === 0) ? 'क्ष' : (ak.indexOf('ज्ञ') === 0 ? 'ज्ञ' : ak.charAt(0));
+          var hexKey = keyChar.split('').map(function (c) { return 'u' + c.charCodeAt(0).toString(16).padStart(4, '0'); }).join('_');
+          var hint = HINDI_AKSHAR[keyChar] || ('Devanagari akshar "' + ak + '"');
           seq.push({
             gloss: ak, icon: ak, hi: 'अक्षर "' + ak + '"',
-            desc: hint, anim: 'anim-pulse', dir: 'हिन्दी', isAlpha: true, badge: ak, shape: 'akshar'
+            desc: hint, anim: 'anim-pulse', dir: 'हिन्दी', isAlpha: true, isHindi: true,
+            hindiKey: hexKey, badge: ak, shape: 'akshar'
           });
         });
       } else {
@@ -681,14 +683,22 @@
     var row = document.createElement('div');
     row.style.display = 'flex'; row.style.gap = '.5rem'; row.style.alignItems = 'center'; row.style.flexWrap = 'wrap';
     var replay = document.createElement('button'); replay.type = 'button'; replay.className = 'btn sm ghost'; replay.textContent = '↻ Replay Signs';
-    var attr = document.createElement('span'); attr.className = 'isl-attr'; attr.textContent = 'ISL Sign Cards · ISLVT (Waghmare & Deshpande, 2024, doi:10.17632/98mzk82wbb.1)';
+    var attr = document.createElement('span'); attr.className = 'isl-attr'; attr.textContent = 'ISL Sign Cards · ISLVT (doi:10.17632/98mzk82wbb.1) & Hindi ISL (Krish Bhagat, Kaggle)';
     row.appendChild(replay); row.appendChild(attr);
 
     var timerId = null;
     function showIndex(idx) {
       var item = seq[idx];
       gbox.className = 'isl-glyph-box ' + item.anim;
-      if (item.isAlpha && /^[A-Z1-9]$/.test(item.gloss)) {
+      if (item.isHindi && item.hindiKey) {
+        svgWrap.innerHTML = '';
+        var himg = document.createElement('img');
+        himg.src = 'assets/isl-hi/' + item.hindiKey + '.jpg';
+        himg.alt = 'Hindi ISL sign for ' + item.gloss;
+        himg.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:10px;display:block;';
+        himg.onerror = function () { svgWrap.innerHTML = renderFlashcardSvg(item); };
+        svgWrap.appendChild(himg);
+      } else if (item.isAlpha && /^[A-Z1-9]$/.test(item.gloss)) {
         svgWrap.innerHTML = '';
         var img = document.createElement('img');
         img.src = 'assets/isl/' + item.gloss + '.jpg';
